@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Formline — 3D Print Ordering</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-deep:#121D33;
+    --navy-panel:#1B2A47;
+    --paper:#EDEAE1;
+    --line:#5C7096;
+    --line-soft:#33456A;
+    --ink:#121D33;
+    --amber:#FFB238;
+    --amber-dim:#8A6423;
+    --white:#F4F2ED;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--navy-deep);
+    color:var(--white);
+    font-family:'Inter',sans-serif;
+    font-size:16px;
+    line-height:1.5;
+  }
+  h1,h2,h3{
+    font-family:'Space Grotesk',sans-serif;
+    margin:0;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  a{color:inherit;}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 32px;}
+
+  /* graph-paper texture */
+  .grid-bg{
+    background-image:
+      linear-gradient(var(--line-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+    background-size:40px 40px;
+    background-position:-1px -1px;
+    opacity:0.35;
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+  }
+
+  /* registration cross, used sparingly as a recurring motif */
+  .reg{
+    width:14px;height:14px;position:relative;flex-shrink:0;
+  }
+  .reg::before,.reg::after{
+    content:'';position:absolute;background:var(--amber);
+  }
+  .reg::before{width:14px;height:1.5px;top:6.25px;left:0;}
+  .reg::after{width:1.5px;height:14px;left:6.25px;top:0;}
+
+  header{
+    position:sticky;top:0;z-index:20;
+    background:rgba(18,29,51,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line-soft);
+  }
+  .nav{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:20px 0;
+  }
+  .logo{
+    display:flex;align-items:center;gap:10px;
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;
+    letter-spacing:-0.01em;
+  }
+  .navlinks{display:flex;gap:32px;font-size:14.5px;}
+  .navlinks a{text-decoration:none;color:var(--white);opacity:0.75;transition:opacity .15s;}
+  .navlinks a:hover{opacity:1;}
+  .nav-cta{
+    font-size:14px;font-weight:500;padding:9px 18px;
+    background:var(--amber);color:var(--navy-deep);
+    border-radius:2px;text-decoration:none;
+  }
+
+  /* HERO */
+  .hero{position:relative;overflow:hidden;padding:96px 0 88px;}
+  .hero .wrap{position:relative;z-index:1;}
+  .hero-grid{
+    display:grid;grid-template-columns:1.15fr 0.85fr;gap:56px;align-items:center;
+  }
+  .kicker{
+    display:flex;align-items:center;gap:10px;
+    font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--amber);
+    margin-bottom:22px;
+  }
+  .hero h1{
+    font-size:clamp(38px,5vw,58px);
+    line-height:1.06;
+    max-width:11ch;
+  }
+  .hero p{
+    max-width:42ch;margin-top:22px;font-size:17px;color:#C7D0E0;
+  }
+  .hero-actions{margin-top:32px;display:flex;gap:14px;align-items:center;}
+  .btn-primary{
+    background:var(--amber);color:var(--navy-deep);
+    padding:13px 24px;border-radius:2px;text-decoration:none;
+    font-weight:600;font-size:15px;
+  }
+  .btn-ghost{
+    color:var(--white);text-decoration:none;font-size:15px;
+    border-bottom:1px solid var(--line);padding-bottom:2px;
+  }
+
+  /* hero technical illustration */
+  .plate{
+    border:1px solid var(--line-soft);
+    background:var(--navy-panel);
+    padding:24px;border-radius:2px;
+  }
+  .plate-label{
+    display:flex;justify-content:space-between;
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--line);
+    margin-bottom:14px;
+  }
+  svg.diagram{width:100%;height:auto;display:block;}
+
+  section{position:relative;padding:88px 0;}
+  .section-head{max-width:52ch;margin-bottom:48px;}
+  .section-head .kicker{margin-bottom:14px;}
+  .section-head h2{font-size:clamp(26px,3vw,34px);}
+  .section-head p{color:#C7D0E0;margin-top:14px;font-size:15.5px;}
+
+  /* MENU / ORDER FORM */
+  #order{background:var(--paper);color:var(--ink);}
+  #order .kicker{color:var(--amber-dim);}
+  #order .section-head p{color:#4A4436;}
+
+  .order-panel{
+    display:grid;grid-template-columns:1fr;
+    border:1px solid #C9C3AF;
+    max-width:640px;
+  }
+
+  .empty-state{
+    max-width:520px;
+    border:1px dashed #B8B29C;
+    background:#E5E1D2;
+    padding:48px 36px;
+    text-align:center;
+    margin-bottom:40px;
+  }
+  .empty-state h3{
+    font-size:20px;margin-bottom:10px;color:var(--ink);
+  }
+  .empty-state p{
+    font-size:14.5px;color:#5A5442;max-width:38ch;margin:0 auto 24px;
+  }
+  .upload-btn{
+    display:inline-block;
+    background:var(--ink);color:var(--paper);
+    padding:12px 22px;border-radius:2px;
+    font-size:14.5px;font-weight:500;cursor:pointer;
+  }
+  .upload-btn:hover{background:#28395C;}
+
+  .material-list{}
+  .material-row{
+    display:grid;grid-template-columns:20px 1fr;
+    align-items:center;gap:18px;
+    padding:20px 24px;
+    border-bottom:1px solid #C9C3AF;
+    cursor:pointer;
+    transition:background .12s;
+  }
+  .material-row:last-child{border-bottom:none;}
+  .material-row:hover{background:#E2DECF;}
+  .material-row.active{background:#DCD6C0;}
+  .swatch{
+    width:16px;height:16px;border-radius:50%;
+    border:2px solid var(--ink);
+  }
+  .material-name{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16.5px;}
+  .material-meta{font-size:13.5px;color:#5A5442;margin-top:3px;}
+  .color-drop{
+    display:flex;gap:9px;
+    max-height:0;opacity:0;overflow:hidden;
+    margin-top:0;
+    transition:max-height .28s ease, opacity .2s ease .04s, margin-top .28s ease;
+  }
+  .material-row:hover .color-drop{
+    max-height:28px;opacity:1;margin-top:12px;
+  }
+  .color-dot{
+    width:15px;height:15px;border-radius:50%;
+    border:1px solid rgba(18,29,51,0.35);
+    flex-shrink:0;
+  }
+  .material-price{font-family:'IBM Plex Mono',monospace;font-size:14px;text-align:right;color:#3A3527;}
+  .material-price span{display:block;font-size:11px;color:#8A836C;margin-top:2px;}
+
+  .calc{padding:28px 28px 32px;background:#E5E1D2;}
+  .calc h3{font-size:15px;font-family:'IBM Plex Mono',monospace;font-weight:500;color:#5A5442;margin-bottom:20px;letter-spacing:0.01em;}
+  .field{margin-bottom:18px;}
+  .field label{display:block;font-size:13.5px;margin-bottom:7px;color:#3A3527;}
+  .field input[type=number]{
+    width:100%;padding:11px 12px;border:1px solid #B8B29C;background:var(--paper);
+    font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--ink);border-radius:2px;
+  }
+  .field input[type=number]:focus{outline:2px solid var(--ink);outline-offset:1px;}
+  .finish-options{display:flex;gap:8px;}
+  .finish-btn{
+    flex:1;padding:9px 6px;font-size:13px;text-align:center;
+    border:1px solid #B8B29C;background:var(--paper);cursor:pointer;border-radius:2px;
+    font-family:'Inter',sans-serif;
+  }
+  .finish-btn.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .estimate{
+    margin-top:24px;padding-top:20px;border-top:1px dashed #B8B29C;
+  }
+  .estimate-row{display:flex;justify-content:space-between;font-size:14px;color:#5A5442;margin-bottom:8px;}
+  .estimate-total{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin-top:10px;
+  }
+  .estimate-total .num{font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:700;}
+  .estimate-total .lbl{font-size:13px;color:#5A5442;}
+  .btn-order{
+    width:100%;margin-top:20px;padding:14px;background:var(--ink);color:var(--paper);
+    border:none;border-radius:2px;font-family:'Inter',sans-serif;font-weight:600;font-size:15px;cursor:pointer;
+  }
+  .btn-order:hover{background:#28395C;}
+  .lead-note{font-size:12px;color:#8A836C;margin-top:10px;text-align:center;}
+
+  /* HOW IT WORKS — genuine sequence, numbering earned */
+  #how{background:var(--navy-deep);}
+  .steps{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+    background:var(--line-soft);border:1px solid var(--line-soft);
+  }
+  .step{background:var(--navy-deep);padding:28px 24px;}
+  .step-num{font-family:'IBM Plex Mono',monospace;color:var(--amber);font-size:13px;margin-bottom:16px;}
+  .step h3{font-size:17px;margin-bottom:8px;}
+  .step p{font-size:14px;color:#AAB6CC;}
+
+  footer{
+    border-top:1px solid var(--line-soft);
+    padding:40px 0;
+  }
+  .foot-row{display:flex;justify-content:space-between;align-items:center;font-size:13.5px;color:#8493AF;}
+
+  @media (max-width:840px){
+    .hero-grid{grid-template-columns:1fr;}
+    .order-panel{grid-template-columns:1fr;}
+    .material-list{border-right:none;border-bottom:1px solid #C9C3AF;}
+    .steps{grid-template-columns:1fr 1fr;}
+    .navlinks{display:none;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <div class="logo"><div class="reg"></div>FORMLINE</div>
+    <nav class="navlinks">
+      <a href="#order">Materials</a>
+      <a href="#how">How it works</a>
+    </nav>
+    <a href="#order" class="nav-cta">Start an order</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="grid-bg"></div>
+  <div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <div class="kicker"><div class="reg"></div>0.4MM NOZZLE · ±0.1MM TOLERANCE</div>
+        <h1>Pick a design.<br>Get a part.</h1>
+        <p>Choose from our catalog, pick a material off the menu, and we print and ship it. No account, no minimum order, no back-and-forth.</p>
+        <div class="hero-actions">
+          <a href="#order" class="btn-primary">Browse designs</a>
+          <a href="#how" class="btn-ghost">See how it works</a>
+        </div>
+      </div>
+      <div class="plate">
+        <div class="plate-label"><span>PRINTBOUNCE.EXE</span><span id="gameScore">SCORE 0</span></div>
+        <canvas id="printerGame" width="320" height="240" style="width:100%;height:auto;display:block;background:#1B2A47;border-radius:1px;cursor:pointer;"></canvas>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--line);margin-top:10px;text-align:center;">SPACE OR CLICK TO FLAP</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="order">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker"><div class="reg"></div>THE MENU</div>
+      <h2>Available materials</h2>
+      <p>Two materials, each suited to a different kind of part. Upload your file and we'll confirm pricing and lead time.</p>
+    </div>
+
+    <div class="order-panel">
+      <div class="material-list" id="materialList">
+        <div class="material-row active" data-material="PLA" data-lead="2–3 days">
+          <div class="swatch" style="background:#F4F2ED;"></div>
+          <div>
+            <div class="material-name">PLA</div>
+            <div class="material-meta">General purpose · rigid, easy to finish</div>
+            <div class="color-drop">
+              <div class="color-dot" style="background:#1A1A1A;" title="Black"></div>
+              <div class="color-dot" style="background:#1F3A5F;" title="Dark blue"></div>
+              <div class="color-dot" style="background:#F4F2ED;" title="White"></div>
+            </div>
+          </div>
+        </div>
+        <div class="material-row" data-material="TPU" data-lead="3–4 days">
+          <div class="swatch" style="background:#5C7A73;"></div>
+          <div>
+            <div class="material-name">TPU</div>
+            <div class="material-meta">Flexible, abrasion resistant, no cracking</div>
+            <div class="color-drop">
+              <div class="color-dot" style="background:#F4F2ED;" title="White"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <a href="#how" class="btn-primary" style="display:inline-block;margin-top:32px;">Browse the catalog</a>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="kicker"><div class="reg"></div>PROCESS</div>
+      <h2>Four steps, no studio visit</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3>Browse the catalog</h3>
+        <p>Every design on the site is one we've made and tested ourselves — pick the one you want.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3>Choose material &amp; finish</h3>
+        <p>Pick from the menu above. We'll match it to the design you've chosen.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3>We slice and confirm</h3>
+        <p>You get a fixed quote and lead time by email before anything goes on the bed.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <h3>Print, inspect, ship</h3>
+        <p>Every part is checked against your file's tolerances before it leaves the shop.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-row">
+    <div class="logo" style="font-size:15px;"><div class="reg"></div>FORMLINE</div>
+    <div>Fabrication shop · orders queued 7am–6pm</div>
+  </div>
+</footer>
+
+<script>
+  const rows = document.querySelectorAll('.material-row');
+
+  rows.forEach(row => {
+    row.addEventListener('click', () => {
+      rows.forEach(r => r.classList.remove('active'));
+      row.classList.add('active');
+    });
+  });
+
+  const refPhoto = document.getElementById('refPhoto');
+  const refPhotoName = document.getElementById('refPhotoName');
+  if (refPhoto){
+    refPhoto.addEventListener('change', () => {
+      if (refPhoto.files && refPhoto.files.length){
+        refPhotoName.textContent = `Attached: ${refPhoto.files[0].name}`;
+        refPhotoName.style.display = 'block';
+      }
+    });
+  }
+</script>
+
+<script>
+  (function(){
+    const canvas = document.getElementById('printerGame');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    const COLORS = {
+      bg: '#1B2A47',
+      grid: '#28395C',
+      pipeFill: '#16233D',
+      pipeLine: '#FFB238',
+      birdBody: '#F4F2ED',
+      birdTip: '#FFB238',
+      text: '#F4F2ED'
+    };
+
+    let bird, pipes, frame, score, gravity, flapV, speed, gapHeight, pipeWidth, gameOver, started;
+
+    function resetGame(){
+      bird = { x: 60, y: H/2, vy: 0, r: 9 };
+      pipes = [];
+      frame = 0;
+      score = 0;
+      gravity = 0.35;
+      flapV = -5.6;
+      speed = 2.2;
+      gapHeight = 78;
+      pipeWidth = 34;
+      gameOver = false;
+      started = false;
+      updateScoreLabel();
+    }
+
+    function updateScoreLabel(){
+      const el = document.getElementById('gameScore');
+      if (el) el.textContent = 'SCORE ' + score;
+    }
+
+    function flap(){
+      if (gameOver){ resetGame(); return; }
+      started = true;
+      bird.vy = flapV;
+    }
+
+    function spawnPipe(){
+      const margin = 26;
+      const gapY = margin + Math.random() * (H - margin * 2 - gapHeight);
+      pipes.push({ x: W + pipeWidth, gapY, passed:false });
+    }
+
+    function update(){
+      if (!started || gameOver) return;
+      frame++;
+      bird.vy += gravity;
+      bird.y += bird.vy;
+
+      if (frame % 95 === 0) spawnPipe();
+
+      pipes.forEach(p => p.x -= speed);
+      pipes = pipes.filter(p => p.x > -pipeWidth);
+
+      for (const p of pipes){
+        if (!p.passed && p.x + pipeWidth < bird.x){
+          p.passed = true;
+          score++;
+          updateScoreLabel();
+        }
+        const withinX = bird.x + bird.r > p.x && bird.x - bird.r < p.x + pipeWidth;
+        if (withinX){
+          const withinGap = bird.y - bird.r > p.gapY && bird.y + bird.r < p.gapY + gapHeight;
+          if (!withinGap) gameOver = true;
+        }
+      }
+
+      if (bird.y - bird.r < 0 || bird.y + bird.r > H){
+        gameOver = true;
+      }
+    }
+
+    function drawGrid(){
+      ctx.strokeStyle = COLORS.grid;
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= W; x += 20){
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      }
+      for (let y = 0; y <= H; y += 20){
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+    }
+
+    function drawPipe(p){
+      ctx.fillStyle = COLORS.pipeFill;
+      ctx.strokeStyle = COLORS.pipeLine;
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(p.x, 0, pipeWidth, p.gapY);
+      ctx.strokeRect(p.x, 0, pipeWidth, p.gapY);
+      ctx.fillRect(p.x, p.gapY + gapHeight, pipeWidth, H - (p.gapY + gapHeight));
+      ctx.strokeRect(p.x, p.gapY + gapHeight, pipeWidth, H - (p.gapY + gapHeight));
+
+      ctx.strokeStyle = 'rgba(255,178,56,0.35)';
+      ctx.lineWidth = 1;
+      for (let ly = 6; ly < p.gapY; ly += 8){
+        ctx.beginPath(); ctx.moveTo(p.x + 3, ly); ctx.lineTo(p.x + pipeWidth - 3, ly); ctx.stroke();
+      }
+      for (let ly = p.gapY + gapHeight + 6; ly < H; ly += 8){
+        ctx.beginPath(); ctx.moveTo(p.x + 3, ly); ctx.lineTo(p.x + pipeWidth - 3, ly); ctx.stroke();
+      }
+    }
+
+    function drawBird(){
+      ctx.save();
+      ctx.translate(bird.x, bird.y);
+      const angle = Math.max(-0.5, Math.min(0.9, bird.vy * 0.08));
+      ctx.rotate(angle);
+      ctx.fillStyle = COLORS.birdBody;
+      ctx.fillRect(-6, -12, 12, 10);
+      ctx.fillStyle = COLORS.birdTip;
+      ctx.beginPath();
+      ctx.moveTo(-5, -2);
+      ctx.lineTo(5, -2);
+      ctx.lineTo(0, 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function draw(){
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = COLORS.bg;
+      ctx.fillRect(0, 0, W, H);
+      drawGrid();
+      pipes.forEach(drawPipe);
+      drawBird();
+
+      ctx.textAlign = 'center';
+      if (!started){
+        ctx.fillStyle = COLORS.text;
+        ctx.font = '11px "IBM Plex Mono", monospace';
+        ctx.fillText('CLICK OR PRESS SPACE TO START', W / 2, H / 2 - 20);
+      } else if (gameOver){
+        ctx.fillStyle = COLORS.pipeLine;
+        ctx.font = '13px "Space Grotesk", sans-serif';
+        ctx.fillText('PRINT FAILED', W / 2, H / 2 - 8);
+        ctx.fillStyle = COLORS.text;
+        ctx.font = '11px "IBM Plex Mono", monospace';
+        ctx.fillText('CLICK TO RETRY · SCORE ' + score, W / 2, H / 2 + 12);
+      }
+    }
+
+    function loop(){
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    canvas.addEventListener('click', flap);
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); flap(); }, { passive:false });
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space'){ e.preventDefault(); flap(); }
+    });
+
+    resetGame();
+    loop();
+  })();
+</script>
+
+</body>
+</html>
