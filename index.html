@@ -147,26 +147,26 @@
   }
 
   .empty-state{
-    max-width:520px;
-    border:1px dashed #B8B29C;
-    background:#E5E1D2;
+    max-width:480px;
+    border:1px dashed #4A5C82;
+    background:var(--navy-panel);
     padding:48px 36px;
     text-align:center;
-    margin-bottom:40px;
+    border-radius:2px;
   }
   .empty-state h3{
-    font-size:20px;margin-bottom:10px;color:var(--ink);
+    font-size:20px;margin-bottom:10px;color:var(--white);
   }
   .empty-state p{
-    font-size:14.5px;color:#5A5442;max-width:38ch;margin:0 auto 24px;
+    font-size:14.5px;color:#AAB6CC;max-width:38ch;margin:0 auto 24px;
   }
   .upload-btn{
     display:inline-block;
-    background:var(--ink);color:var(--paper);
+    background:var(--amber);color:var(--navy-deep);
     padding:12px 22px;border-radius:2px;
-    font-size:14.5px;font-weight:500;cursor:pointer;
+    font-size:14.5px;font-weight:600;cursor:pointer;
   }
-  .upload-btn:hover{background:#28395C;}
+  .upload-btn:hover{background:#FFC15C;}
 
   .material-list{}
   .material-row{
@@ -235,6 +235,7 @@
   }
   .btn-order:hover{background:#28395C;}
   .lead-note{font-size:12px;color:#8A836C;margin-top:10px;text-align:center;}
+  #designs .lead-note{color:var(--amber);font-family:'IBM Plex Mono',monospace;}
 
   /* HOW IT WORKS — genuine sequence, numbering earned */
   #how{background:var(--navy-deep);}
@@ -287,7 +288,7 @@
         <h1>Pick a design.<br>Get a part.</h1>
         <p>Choose from our catalog, pick a material off the menu, and we print and ship it. No account, no minimum order, no back-and-forth.</p>
         <div class="hero-actions">
-          <a href="#order" class="btn-primary">Browse designs</a>
+          <a href="#designs" class="btn-primary">Browse designs</a>
           <a href="#how" class="btn-ghost">See how it works</a>
         </div>
       </div>
@@ -366,6 +367,21 @@
         <h3>Print, inspect, ship</h3>
         <p>Every part is checked against your file's tolerances before it leaves the shop.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<section id="designs">
+  <div class="wrap" style="display:flex;justify-content:center;">
+    <div class="empty-state">
+      <div class="reg" style="margin:0 auto 20px;"></div>
+      <h3>No open models right now.</h3>
+      <p>Maybe upload a reference photo for our team to make a custom print?</p>
+      <label class="upload-btn" for="refPhoto">
+        Upload a reference photo
+        <input type="file" id="refPhoto" accept="image/*" hidden>
+      </label>
+      <div id="refPhotoName" class="lead-note" style="display:none;"></div>
     </div>
   </div>
 </section>
