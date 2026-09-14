@@ -77,6 +77,37 @@
     font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;
     letter-spacing:-0.01em;
   }
+  .admin-user-row{
+    display:flex;align-items:center;gap:16px;
+    padding:16px 0;border-bottom:1px solid var(--line-soft);
+  }
+  .admin-user-row .u-name{
+    flex:1;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;
+  }
+  .admin-user-row .u-id{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8493AF;
+    display:block;margin-top:3px;font-weight:400;
+  }
+  .admin-role-select{
+    background:var(--navy-deep);color:var(--white);
+    border:1px solid var(--line-soft);border-radius:2px;
+    padding:8px 10px;font-family:'IBM Plex Mono',monospace;font-size:13px;
+  }
+  .admin-save-btn{
+    background:none;border:1px solid var(--line-soft);color:var(--white);
+    padding:8px 14px;border-radius:2px;font-size:13px;cursor:pointer;
+  }
+  .admin-save-btn:hover{border-color:var(--amber);color:var(--amber);}
+
+  .logo-group{display:flex;align-items:center;gap:14px;}
+  .admin-badge{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:500;
+    color:var(--amber);background:rgba(255,178,56,0.1);
+    border:1px solid var(--amber);border-radius:2px;
+    padding:5px 10px;cursor:pointer;letter-spacing:0.02em;
+  }
+  .admin-badge:hover{background:rgba(255,178,56,0.2);}
+
   .navlinks{display:flex;gap:32px;font-size:14.5px;}
   .navlinks a{text-decoration:none;color:var(--white);opacity:0.75;transition:opacity .15s;}
   .navlinks a:hover{opacity:1;}
@@ -579,7 +610,10 @@
 
 <header>
   <div class="wrap nav">
-    <div class="logo"><div class="reg"></div>DEEZPRINTZ</div>
+    <div class="logo-group">
+      <div class="logo"><div class="reg"></div>DEEZPRINTZ</div>
+      <button class="admin-badge" id="adminPanelBtn" style="display:none;" type="button">Admin Panel</button>
+    </div>
     <nav class="navlinks">
       <a href="#order">Materials</a>
       <a href="#how">How it works</a>
@@ -697,6 +731,23 @@
         <div class="modal-note" id="signupMsg" style="text-align:center;margin-top:10px;"></div>
       </form>
     </div>
+  </div>
+</div>
+
+<div class="cart-page" id="adminPage">
+  <div class="cart-page-header">
+    <div class="wrap cart-page-header-inner">
+      <div class="logo"><div class="reg"></div>DEEZPRINTZ</div>
+      <button class="cart-page-close" id="closeAdminPage" aria-label="Close">&times; Close</button>
+    </div>
+  </div>
+
+  <div class="wrap cart-page-body">
+    <h1>Admin Panel</h1>
+    <p style="color:#AAB6CC;font-size:14.5px;margin:-20px 0 32px;">All registered users. Change a role and hit save.</p>
+
+    <div id="adminUserList"></div>
+    <div class="modal-note" id="adminPanelMsg" style="margin-top:16px;"></div>
   </div>
 </div>
 
@@ -961,6 +1012,7 @@
       closeModal();
       if (cartPage) cartPage.classList.remove('active');
       if (accountPage) accountPage.classList.remove('active');
+      if (adminPage) adminPage.classList.remove('active');
       document.body.style.overflow = '';
     }
   });
@@ -1196,13 +1248,32 @@
     accountTabs.style.display = 'flex';
     accountLoggedIn.style.display = 'none';
     showLoginTab();
+    applyRoleUI('customer');
   }
-  function showLoggedInView(user){
+  async function fetchUserRole(userId){
+    if (!supabaseClient) return 'customer';
+    const { data, error } = await supabaseClient
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+    if (error || !data) return 'customer';
+    return data.role;
+  }
+
+  function applyRoleUI(role){
+    const adminPanelBtn = document.getElementById('adminPanelBtn');
+    if (adminPanelBtn) adminPanelBtn.style.display = (role === 'admin') ? 'inline-block' : 'none';
+  }
+
+  async function showLoggedInView(user){
     accountTabs.style.display = 'none';
     loginForm.style.display = 'none';
     signupForm.style.display = 'none';
     accountLoggedIn.style.display = 'block';
-    loggedInEmail.textContent = user.email;
+    const role = await fetchUserRole(user.id);
+    loggedInEmail.textContent = `${user.email} (${role})`;
+    applyRoleUI(role);
   }
   if (tabLogin) tabLogin.addEventListener('click', showLoginTab);
   if (tabSignup) tabSignup.addEventListener('click', showSignupTab);
@@ -1280,6 +1351,70 @@
   }
 
   refreshAuthUI();
+
+  const adminPanelBtn = document.getElementById('adminPanelBtn');
+  const adminPage = document.getElementById('adminPage');
+  const closeAdminPage = document.getElementById('closeAdminPage');
+  const adminUserList = document.getElementById('adminUserList');
+  const adminPanelMsg = document.getElementById('adminPanelMsg');
+
+  async function loadAdminUsers(){
+    adminPanelMsg.textContent = 'Loading users…';
+    adminPanelMsg.style.color = '#AAB6CC';
+    const { data, error } = await supabaseClient
+      .from('profiles')
+      .select('id, full_name, role, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error){
+      adminPanelMsg.textContent = error.message;
+      adminPanelMsg.style.color = '#E9736B';
+      return;
+    }
+    adminPanelMsg.textContent = '';
+
+    adminUserList.innerHTML = data.map(u => `
+      <div class="admin-user-row" data-id="${u.id}">
+        <div class="u-name">
+          ${u.full_name || '(no name)'}
+          <span class="u-id">${u.id}</span>
+        </div>
+        <select class="admin-role-select" data-id="${u.id}">
+          <option value="customer" ${u.role === 'customer' ? 'selected' : ''}>customer</option>
+          <option value="staff" ${u.role === 'staff' ? 'selected' : ''}>staff</option>
+          <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>admin</option>
+        </select>
+        <button class="admin-save-btn" data-id="${u.id}" type="button">Save</button>
+      </div>
+    `).join('');
+
+    adminUserList.querySelectorAll('.admin-save-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const select = adminUserList.querySelector(`.admin-role-select[data-id="${id}"]`);
+        const newRole = select.value;
+        btn.textContent = 'Saving…';
+        const { error: updateError } = await supabaseClient
+          .from('profiles')
+          .update({ role: newRole })
+          .eq('id', id);
+        btn.textContent = updateError ? 'Failed' : 'Saved';
+        setTimeout(() => { btn.textContent = 'Save'; }, 1500);
+      });
+    });
+  }
+
+  function openAdminPage(){
+    adminPage.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    loadAdminUsers();
+  }
+  function closeAdminPageFn(){
+    adminPage.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  if (adminPanelBtn) adminPanelBtn.addEventListener('click', openAdminPage);
+  if (closeAdminPage) closeAdminPage.addEventListener('click', closeAdminPageFn);
 
   const refPhoto = document.getElementById('refPhoto');
   const refPhotoName = document.getElementById('refPhotoName');
