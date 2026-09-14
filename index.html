@@ -185,6 +185,75 @@
     border:1px solid var(--line-soft);padding:3px 8px;border-radius:2px;
   }
 
+  .modal-overlay{
+    display:none;position:fixed;inset:0;z-index:50;
+    background:rgba(10,15,26,0.72);
+    align-items:center;justify-content:center;
+    padding:24px;
+  }
+  .modal-overlay.active{display:flex;}
+  .order-modal{
+    position:relative;
+    width:100%;max-width:400px;
+    background:var(--navy-panel);
+    border:1px solid var(--line-soft);
+    border-radius:2px;
+    padding:32px 28px 28px;
+  }
+  .modal-close{
+    position:absolute;top:14px;right:16px;
+    background:none;border:none;color:#AAB6CC;
+    font-size:22px;line-height:1;cursor:pointer;padding:4px;
+  }
+  .modal-close:hover{color:var(--white);}
+  .modal-kicker{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--amber);
+    margin-bottom:8px;letter-spacing:0.03em;
+  }
+  .order-modal h3{font-size:19px;margin-bottom:22px;}
+  .modal-field{margin-bottom:20px;}
+  .modal-field label{
+    display:block;font-size:13px;color:#AAB6CC;margin-bottom:10px;
+  }
+  .color-select{display:flex;gap:10px;}
+  .color-select-dot{
+    width:26px;height:26px;border-radius:50%;
+    border:2px solid transparent;cursor:pointer;
+    box-shadow:0 0 0 1px rgba(244,242,237,0.25);
+  }
+  .color-select-dot.active{border-color:var(--amber);}
+  .modal-note{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8493AF;margin-top:9px;}
+  .discount-row{display:flex;gap:8px;}
+  .discount-row input{
+    flex:1;padding:10px 12px;background:var(--navy-deep);
+    border:1px solid var(--line-soft);color:var(--white);
+    font-family:'IBM Plex Mono',monospace;font-size:13.5px;border-radius:2px;
+  }
+  .discount-row input:focus{outline:1px solid var(--amber);}
+  .discount-row button{
+    padding:10px 16px;background:transparent;color:var(--white);
+    border:1px solid var(--line-soft);border-radius:2px;
+    font-size:13.5px;cursor:pointer;
+  }
+  .discount-row button:hover{border-color:var(--amber);color:var(--amber);}
+  .price-summary{
+    border-top:1px dashed var(--line-soft);padding-top:18px;margin-top:6px;
+  }
+  .price-row{
+    display:flex;justify-content:space-between;font-size:14px;color:#AAB6CC;
+    margin-bottom:8px;
+  }
+  .price-total{
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;color:var(--white);
+    margin-top:6px;
+  }
+  .btn-order-confirm{
+    width:100%;margin-top:22px;padding:14px;
+    background:var(--amber);color:var(--navy-deep);
+    border:none;border-radius:2px;font-weight:600;font-size:15px;cursor:pointer;
+  }
+  .btn-order-confirm:hover{background:#FFC15C;}
+
   .printer3d{
     width:150px;height:128px;margin:0 auto 22px;perspective:600px;
   }
@@ -479,9 +548,54 @@
           <div class="design-tags">
             <span class="tag">PLA</span>
           </div>
-          <a href="#order" class="btn-ghost" style="display:inline-block;margin-top:16px;">Order this design →</a>
+          <a href="#" class="btn-ghost" id="openOrderModal" style="display:inline-block;margin-top:16px;">Order this design →</a>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="orderModalOverlay">
+    <div class="order-modal">
+      <button class="modal-close" id="closeOrderModal" aria-label="Close">&times;</button>
+      <div class="modal-kicker">SPIRAL FIDGET CONE</div>
+      <h3>Choose your options</h3>
+
+      <div class="modal-field">
+        <label>Color (PLA)</label>
+        <div class="color-select">
+          <button class="color-select-dot active" style="background:#1A1A1A;" data-color="Black" title="Black"></button>
+          <button class="color-select-dot" style="background:#1F3A5F;" data-color="Dark blue" title="Dark blue"></button>
+          <button class="color-select-dot" style="background:#F4F2ED;" data-color="White" title="White"></button>
+        </div>
+        <div class="modal-note" id="colorLabel">Selected: Black</div>
+      </div>
+
+      <div class="modal-field">
+        <label for="discountCode">Discount code</label>
+        <div class="discount-row">
+          <input type="text" id="discountCode" placeholder="Enter code">
+          <button id="applyDiscount">Apply</button>
+        </div>
+        <div class="modal-note" id="discountMsg"></div>
+      </div>
+
+      <div class="price-summary">
+        <div class="price-row">
+          <span>Original price</span>
+          <span id="originalPrice">$6.00</span>
+        </div>
+        <div class="price-row" id="discountRow" style="display:none;">
+          <span id="discountLabel">Discount</span>
+          <span id="discountAmount">−$0.00</span>
+        </div>
+        <div class="price-row price-total">
+          <span>Total</span>
+          <span id="totalPrice">$6.00</span>
+        </div>
+      </div>
+
+      <button class="btn-order-confirm" id="confirmOrder">Add to order</button>
+      <div class="modal-note" id="confirmMsg" style="text-align:center;margin-top:10px;"></div>
     </div>
   </div>
 
@@ -553,6 +667,105 @@
       row.classList.add('active');
     });
   });
+
+  const BASE_PRICE = 6.00;
+  const DISCOUNT_CODES = {
+    'PRINT10': 0.10,
+    'WELCOME15': 0.15
+  };
+  let selectedColor = 'Black';
+  let activeDiscount = 0;
+  let activeCode = '';
+
+  const orderModalOverlay = document.getElementById('orderModalOverlay');
+  const openOrderModal = document.getElementById('openOrderModal');
+  const closeOrderModal = document.getElementById('closeOrderModal');
+
+  function openModal(e){
+    if (e) e.preventDefault();
+    orderModalOverlay.classList.add('active');
+  }
+  function closeModal(){
+    orderModalOverlay.classList.remove('active');
+  }
+  if (openOrderModal) openOrderModal.addEventListener('click', openModal);
+  if (closeOrderModal) closeOrderModal.addEventListener('click', closeModal);
+  orderModalOverlay.addEventListener('click', (e) => {
+    if (e.target === orderModalOverlay) closeModal();
+  });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  const colorDots = document.querySelectorAll('.color-select-dot');
+  const colorLabel = document.getElementById('colorLabel');
+  colorDots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      colorDots.forEach(d => d.classList.remove('active'));
+      dot.classList.add('active');
+      selectedColor = dot.dataset.color;
+      colorLabel.textContent = `Selected: ${selectedColor}`;
+    });
+  });
+
+  const discountInput = document.getElementById('discountCode');
+  const discountMsg = document.getElementById('discountMsg');
+  const applyDiscountBtn = document.getElementById('applyDiscount');
+
+  function updatePriceDisplay(){
+    const originalPriceEl = document.getElementById('originalPrice');
+    const discountRow = document.getElementById('discountRow');
+    const discountLabel = document.getElementById('discountLabel');
+    const discountAmount = document.getElementById('discountAmount');
+    const totalPriceEl = document.getElementById('totalPrice');
+
+    originalPriceEl.textContent = `$${BASE_PRICE.toFixed(2)}`;
+
+    if (activeDiscount > 0){
+      const off = BASE_PRICE * activeDiscount;
+      const total = BASE_PRICE - off;
+      discountRow.style.display = 'flex';
+      discountLabel.textContent = `Discount (${activeCode})`;
+      discountAmount.textContent = `−$${off.toFixed(2)}`;
+      totalPriceEl.textContent = `$${total.toFixed(2)}`;
+    } else {
+      discountRow.style.display = 'none';
+      totalPriceEl.textContent = `$${BASE_PRICE.toFixed(2)}`;
+    }
+  }
+
+  if (applyDiscountBtn){
+    applyDiscountBtn.addEventListener('click', () => {
+      const code = discountInput.value.trim().toUpperCase();
+      if (!code){
+        discountMsg.textContent = '';
+        return;
+      }
+      if (DISCOUNT_CODES[code]){
+        activeDiscount = DISCOUNT_CODES[code];
+        activeCode = code;
+        discountMsg.textContent = `Code applied — ${Math.round(activeDiscount * 100)}% off.`;
+        discountMsg.style.color = 'var(--amber)';
+      } else {
+        activeDiscount = 0;
+        activeCode = '';
+        discountMsg.textContent = 'That code isn’t valid.';
+        discountMsg.style.color = '#E9736B';
+      }
+      updatePriceDisplay();
+    });
+  }
+
+  const confirmOrderBtn = document.getElementById('confirmOrder');
+  const confirmMsg = document.getElementById('confirmMsg');
+  if (confirmOrderBtn){
+    confirmOrderBtn.addEventListener('click', () => {
+      confirmMsg.textContent = `Added — ${selectedColor} Spiral Fidget Cone.`;
+      confirmMsg.style.color = 'var(--amber)';
+    });
+  }
+
+  updatePriceDisplay();
 
   const refPhoto = document.getElementById('refPhoto');
   const refPhotoName = document.getElementById('refPhotoName');
