@@ -86,6 +86,93 @@
     border-radius:2px;text-decoration:none;
   }
 
+  .cart-btn{
+    display:none;
+    align-items:center;gap:8px;
+    background:var(--amber);color:var(--navy-deep);
+    border:none;padding:9px 16px;border-radius:2px;
+    cursor:pointer;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;
+  }
+  .cart-btn.visible{display:inline-flex;}
+  .cart-btn svg{flex-shrink:0;}
+
+  .cart-page{
+    display:none;
+    position:fixed;inset:0;z-index:60;
+    background:var(--navy-deep);
+    overflow-y:auto;
+  }
+  .cart-page.active{display:block;}
+  .cart-page-header{
+    border-bottom:1px solid var(--line-soft);
+    position:sticky;top:0;background:var(--navy-deep);z-index:2;
+  }
+  .cart-page-header-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:20px 0;
+  }
+  .cart-page-close{
+    background:none;border:1px solid var(--line-soft);color:var(--white);
+    padding:9px 16px;border-radius:2px;font-size:14px;cursor:pointer;
+  }
+  .cart-page-close:hover{border-color:var(--amber);color:var(--amber);}
+  .cart-page-body{
+    padding:56px 32px 100px;max-width:760px;
+  }
+  .cart-page-body h1{
+    font-size:clamp(28px,4vw,38px);margin-bottom:36px;
+  }
+  .cart-item-row{
+    display:flex;align-items:center;gap:20px;
+    padding:22px 0;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .cart-item-swatch{
+    width:56px;height:56px;border-radius:2px;flex-shrink:0;
+    border:1px solid rgba(244,242,237,0.25);
+  }
+  .cart-item-info{flex:1;}
+  .cart-item-info .name{
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16.5px;
+  }
+  .cart-item-info .meta{
+    font-size:13.5px;color:#AAB6CC;margin-top:4px;
+  }
+  .cart-item-qty{
+    display:inline-flex;align-items:center;gap:14px;
+    border:1px solid var(--line-soft);border-radius:2px;
+    padding:6px 12px;margin-top:10px;
+  }
+  .cart-item-qty button{
+    background:none;border:none;color:var(--white);font-size:15px;cursor:pointer;width:16px;
+  }
+  .cart-item-qty button:hover{color:var(--amber);}
+  .cart-item-qty span{font-family:'IBM Plex Mono',monospace;font-size:14px;min-width:14px;text-align:center;}
+  .cart-item-price{
+    font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--white);
+    min-width:70px;text-align:right;
+  }
+  .cart-item-remove{
+    background:none;border:none;color:#8493AF;font-size:13px;cursor:pointer;
+    text-decoration:underline;margin-left:16px;
+  }
+  .cart-item-remove:hover{color:#E9736B;}
+  .cart-empty{
+    display:none;text-align:center;padding:60px 0;color:#AAB6CC;
+  }
+  .cart-empty p{margin-bottom:22px;font-size:15px;}
+  .cart-summary{
+    margin-top:32px;padding-top:24px;
+    max-width:320px;margin-left:auto;
+  }
+  .cart-summary-row{
+    display:flex;justify-content:space-between;font-size:14.5px;color:#AAB6CC;margin-bottom:10px;
+  }
+  .cart-summary-total{
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:21px;color:var(--white);
+    border-top:1px dashed var(--line-soft);padding-top:14px;margin-top:6px;
+  }
+
   /* HERO */
   .hero{position:relative;overflow:hidden;padding:96px 0 88px;}
   .hero .wrap{position:relative;z-index:1;}
@@ -222,6 +309,19 @@
     box-shadow:0 0 0 1px rgba(244,242,237,0.25);
   }
   .color-select-dot.active{border-color:var(--amber);}
+  .qty-stepper{
+    display:inline-flex;align-items:center;gap:16px;
+    border:1px solid var(--line-soft);border-radius:2px;
+    padding:6px 14px;
+  }
+  .qty-stepper button{
+    background:none;border:none;color:var(--white);
+    font-size:17px;cursor:pointer;width:20px;line-height:1;
+  }
+  .qty-stepper button:hover{color:var(--amber);}
+  .qty-stepper span{
+    font-family:'IBM Plex Mono',monospace;font-size:15px;min-width:16px;text-align:center;
+  }
   .modal-note{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8493AF;margin-top:9px;}
   .discount-row{display:flex;gap:8px;}
   .discount-row input{
@@ -429,9 +529,62 @@
       <a href="#order">Materials</a>
       <a href="#how">How it works</a>
     </nav>
-    <a href="#order" class="nav-cta">Start an order</a>
+    <a href="#order" class="nav-cta" id="navCta">Start an order</a>
+    <button class="cart-btn" id="cartBtn" aria-label="View cart">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="9" cy="21" r="1.4" fill="currentColor" stroke="none"/>
+        <circle cx="18" cy="21" r="1.4" fill="currentColor" stroke="none"/>
+        <path d="M2.5 3h2.4l2.1 12.2a2 2 0 0 0 2 1.6h8.3a2 2 0 0 0 2-1.6L21 7.5H6"/>
+      </svg>
+      <span id="cartCount">0</span>
+    </button>
   </div>
 </header>
+
+<div class="cart-page" id="cartPage">
+  <div class="cart-page-header">
+    <div class="wrap cart-page-header-inner">
+      <div class="logo"><div class="reg"></div>DEEZPRINTZ</div>
+      <button class="cart-page-close" id="closeCartPage" aria-label="Close cart">&times; Close</button>
+    </div>
+  </div>
+
+  <div class="wrap cart-page-body">
+    <h1>Your cart</h1>
+
+    <div id="cartPageItems"></div>
+
+    <div class="cart-empty" id="cartEmptyState">
+      <p>Your cart is empty.</p>
+      <a href="#designs" class="btn-primary" id="cartEmptyBrowse">Browse designs</a>
+    </div>
+
+    <div class="cart-summary" id="cartSummary">
+      <div class="modal-field">
+        <label for="cartDiscountCode">Discount code</label>
+        <div class="discount-row">
+          <input type="text" id="cartDiscountCode" placeholder="Enter code">
+          <button id="cartApplyDiscount" type="button">Apply</button>
+        </div>
+        <div class="modal-note" id="cartDiscountMsg"></div>
+      </div>
+
+      <div class="cart-summary-row">
+        <span>Subtotal</span>
+        <span id="cartSubtotal">$0.00</span>
+      </div>
+      <div class="cart-summary-row" id="cartDiscountRow" style="display:none;">
+        <span id="cartDiscountLabel">Discount</span>
+        <span id="cartDiscountAmount">−$0.00</span>
+      </div>
+      <div class="cart-summary-row cart-summary-total">
+        <span>Total</span>
+        <span id="cartPageTotal">$0.00</span>
+      </div>
+      <button class="btn-order-confirm" id="checkoutBtn">Checkout</button>
+    </div>
+  </div>
+</div>
 
 <section class="hero">
   <div class="grid-bg"></div>
@@ -571,25 +724,17 @@
       </div>
 
       <div class="modal-field">
-        <label for="discountCode">Discount code</label>
-        <div class="discount-row">
-          <input type="text" id="discountCode" placeholder="Enter code">
-          <button id="applyDiscount">Apply</button>
+        <label>Quantity</label>
+        <div class="qty-stepper">
+          <button id="qtyMinus" type="button">−</button>
+          <span id="qtyValue">1</span>
+          <button id="qtyPlus" type="button">+</button>
         </div>
-        <div class="modal-note" id="discountMsg"></div>
       </div>
 
       <div class="price-summary">
-        <div class="price-row">
-          <span>Original price</span>
-          <span id="originalPrice">$6.00</span>
-        </div>
-        <div class="price-row" id="discountRow" style="display:none;">
-          <span id="discountLabel">Discount</span>
-          <span id="discountAmount">−$0.00</span>
-        </div>
         <div class="price-row price-total">
-          <span>Total</span>
+          <span>Price</span>
           <span id="totalPrice">$6.00</span>
         </div>
       </div>
@@ -674,8 +819,10 @@
     'WELCOME15': 0.15
   };
   let selectedColor = 'Black';
-  let activeDiscount = 0;
-  let activeCode = '';
+  let quantity = 1;
+  let cart = [];
+  let cartDiscount = 0;
+  let cartDiscountCode = '';
 
   const orderModalOverlay = document.getElementById('orderModalOverlay');
   const openOrderModal = document.getElementById('openOrderModal');
@@ -694,7 +841,11 @@
     if (e.target === orderModalOverlay) closeModal();
   });
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeModal();
+    if (e.key === 'Escape'){
+      closeModal();
+      if (cartPage) cartPage.classList.remove('active');
+      document.body.style.overflow = '';
+    }
   });
 
   const colorDots = document.querySelectorAll('.color-select-dot');
@@ -708,51 +859,158 @@
     });
   });
 
-  const discountInput = document.getElementById('discountCode');
-  const discountMsg = document.getElementById('discountMsg');
-  const applyDiscountBtn = document.getElementById('applyDiscount');
+  const qtyValueEl = document.getElementById('qtyValue');
+  const qtyMinusBtn = document.getElementById('qtyMinus');
+  const qtyPlusBtn = document.getElementById('qtyPlus');
+  function setQuantity(n){
+    quantity = Math.max(1, n);
+    qtyValueEl.textContent = quantity;
+    updatePriceDisplay();
+  }
+  if (qtyMinusBtn) qtyMinusBtn.addEventListener('click', () => setQuantity(quantity - 1));
+  if (qtyPlusBtn) qtyPlusBtn.addEventListener('click', () => setQuantity(quantity + 1));
 
   function updatePriceDisplay(){
-    const originalPriceEl = document.getElementById('originalPrice');
-    const discountRow = document.getElementById('discountRow');
-    const discountLabel = document.getElementById('discountLabel');
-    const discountAmount = document.getElementById('discountAmount');
     const totalPriceEl = document.getElementById('totalPrice');
-
-    originalPriceEl.textContent = `$${BASE_PRICE.toFixed(2)}`;
-
-    if (activeDiscount > 0){
-      const off = BASE_PRICE * activeDiscount;
-      const total = BASE_PRICE - off;
-      discountRow.style.display = 'flex';
-      discountLabel.textContent = `Discount (${activeCode})`;
-      discountAmount.textContent = `−$${off.toFixed(2)}`;
-      totalPriceEl.textContent = `$${total.toFixed(2)}`;
-    } else {
-      discountRow.style.display = 'none';
-      totalPriceEl.textContent = `$${BASE_PRICE.toFixed(2)}`;
-    }
+    totalPriceEl.textContent = `$${(BASE_PRICE * quantity).toFixed(2)}`;
   }
 
-  if (applyDiscountBtn){
-    applyDiscountBtn.addEventListener('click', () => {
-      const code = discountInput.value.trim().toUpperCase();
+  const navCta = document.getElementById('navCta');
+  const cartBtn = document.getElementById('cartBtn');
+  const cartCount = document.getElementById('cartCount');
+  const cartPage = document.getElementById('cartPage');
+  const closeCartPage = document.getElementById('closeCartPage');
+  const cartPageItems = document.getElementById('cartPageItems');
+  const cartEmptyState = document.getElementById('cartEmptyState');
+  const cartSummary = document.getElementById('cartSummary');
+  const cartSubtotalEl = document.getElementById('cartSubtotal');
+  const cartPageTotalEl = document.getElementById('cartPageTotal');
+
+  const COLOR_HEX = { 'Black':'#1A1A1A', 'Dark blue':'#1F3A5F', 'White':'#F4F2ED' };
+  let cartIdCounter = 0;
+
+  function renderCart(){
+    const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const totalPrice = cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+
+    if (totalQty > 0){
+      navCta.style.display = 'none';
+      cartBtn.classList.add('visible');
+    } else {
+      navCta.style.display = '';
+      cartBtn.classList.remove('visible');
+    }
+    cartCount.textContent = totalQty;
+
+    if (cart.length === 0){
+      cartPageItems.innerHTML = '';
+      cartEmptyState.style.display = 'block';
+      cartSummary.style.display = 'none';
+      return;
+    }
+
+    cartEmptyState.style.display = 'none';
+    cartSummary.style.display = 'block';
+
+    cartPageItems.innerHTML = cart.map(item => `
+      <div class="cart-item-row" data-id="${item.id}">
+        <div class="cart-item-swatch" style="background:${COLOR_HEX[item.color] || '#333'};"></div>
+        <div class="cart-item-info">
+          <div class="name">Spiral Fidget Cone — ${item.color}</div>
+          <div class="meta">$${item.unitPrice.toFixed(2)} each</div>
+          <div class="cart-item-qty">
+            <button class="cart-qty-minus" data-id="${item.id}" type="button">−</button>
+            <span>${item.quantity}</span>
+            <button class="cart-qty-plus" data-id="${item.id}" type="button">+</button>
+          </div>
+        </div>
+        <div class="cart-item-price">$${(item.unitPrice * item.quantity).toFixed(2)}</div>
+        <button class="cart-item-remove" data-id="${item.id}" type="button">Remove</button>
+      </div>
+    `).join('');
+
+    const discountRow = document.getElementById('cartDiscountRow');
+    const discountLabel = document.getElementById('cartDiscountLabel');
+    const discountAmount = document.getElementById('cartDiscountAmount');
+
+    cartSubtotalEl.textContent = `$${totalPrice.toFixed(2)}`;
+    if (cartDiscount > 0){
+      const off = totalPrice * cartDiscount;
+      discountRow.style.display = 'flex';
+      discountLabel.textContent = `Discount (${cartDiscountCode})`;
+      discountAmount.textContent = `−$${off.toFixed(2)}`;
+      cartPageTotalEl.textContent = `$${(totalPrice - off).toFixed(2)}`;
+    } else {
+      discountRow.style.display = 'none';
+      cartPageTotalEl.textContent = `$${totalPrice.toFixed(2)}`;
+    }
+
+    cartPageItems.querySelectorAll('.cart-qty-plus').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = cart.find(i => i.id === btn.dataset.id);
+        if (item){ item.quantity++; renderCart(); }
+      });
+    });
+    cartPageItems.querySelectorAll('.cart-qty-minus').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = cart.find(i => i.id === btn.dataset.id);
+        if (item){
+          item.quantity--;
+          if (item.quantity <= 0) cart = cart.filter(i => i.id !== item.id);
+          renderCart();
+        }
+      });
+    });
+    cartPageItems.querySelectorAll('.cart-item-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        cart = cart.filter(i => i.id !== btn.dataset.id);
+        renderCart();
+      });
+    });
+  }
+
+  const cartDiscountInput = document.getElementById('cartDiscountCode');
+  const cartDiscountMsg = document.getElementById('cartDiscountMsg');
+  const cartApplyDiscountBtn = document.getElementById('cartApplyDiscount');
+  if (cartApplyDiscountBtn){
+    cartApplyDiscountBtn.addEventListener('click', () => {
+      const code = cartDiscountInput.value.trim().toUpperCase();
       if (!code){
-        discountMsg.textContent = '';
+        cartDiscountMsg.textContent = '';
         return;
       }
       if (DISCOUNT_CODES[code]){
-        activeDiscount = DISCOUNT_CODES[code];
-        activeCode = code;
-        discountMsg.textContent = `Code applied — ${Math.round(activeDiscount * 100)}% off.`;
-        discountMsg.style.color = 'var(--amber)';
+        cartDiscount = DISCOUNT_CODES[code];
+        cartDiscountCode = code;
+        cartDiscountMsg.textContent = `Code applied — ${Math.round(cartDiscount * 100)}% off.`;
+        cartDiscountMsg.style.color = 'var(--amber)';
       } else {
-        activeDiscount = 0;
-        activeCode = '';
-        discountMsg.textContent = 'That code isn’t valid.';
-        discountMsg.style.color = '#E9736B';
+        cartDiscount = 0;
+        cartDiscountCode = '';
+        cartDiscountMsg.textContent = 'That code isn’t valid.';
+        cartDiscountMsg.style.color = '#E9736B';
       }
-      updatePriceDisplay();
+      renderCart();
+    });
+  }
+
+  function openCartPage(){
+    cartPage.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeCartPageFn(){
+    cartPage.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  if (cartBtn) cartBtn.addEventListener('click', openCartPage);
+  if (closeCartPage) closeCartPage.addEventListener('click', closeCartPageFn);
+  const cartEmptyBrowse = document.getElementById('cartEmptyBrowse');
+  if (cartEmptyBrowse) cartEmptyBrowse.addEventListener('click', closeCartPageFn);
+  const checkoutBtn = document.getElementById('checkoutBtn');
+  if (checkoutBtn){
+    checkoutBtn.addEventListener('click', () => {
+      checkoutBtn.textContent = 'Order placed!';
+      checkoutBtn.disabled = true;
     });
   }
 
@@ -760,12 +1018,17 @@
   const confirmMsg = document.getElementById('confirmMsg');
   if (confirmOrderBtn){
     confirmOrderBtn.addEventListener('click', () => {
-      confirmMsg.textContent = `Added — ${selectedColor} Spiral Fidget Cone.`;
+      cartIdCounter++;
+      cart.push({ id:'item' + cartIdCounter, color: selectedColor, quantity, unitPrice: BASE_PRICE });
+      renderCart();
+      confirmMsg.textContent = `Added — ${quantity}× ${selectedColor} Spiral Fidget Cone.`;
       confirmMsg.style.color = 'var(--amber)';
+      setQuantity(1);
     });
   }
 
   updatePriceDisplay();
+  renderCart();
 
   const refPhoto = document.getElementById('refPhoto');
   const refPhotoName = document.getElementById('refPhotoName');
