@@ -77,6 +77,25 @@
     font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;
     letter-spacing:-0.01em;
   }
+  .admin-add-row{
+    display:flex;gap:10px;margin:20px 0 24px;
+  }
+  .admin-code-row, .admin-banner-row{
+    display:flex;align-items:center;gap:16px;
+    padding:14px 0;border-bottom:1px solid var(--line-soft);
+  }
+  .admin-code-row .code-name{
+    font-family:'IBM Plex Mono',monospace;font-size:14.5px;color:var(--white);
+    min-width:110px;
+  }
+  .admin-code-row .code-pct{
+    color:#AAB6CC;font-size:13.5px;min-width:60px;
+  }
+  .admin-code-row .code-status, .admin-banner-row .banner-status{
+    font-size:12px;color:#8493AF;min-width:64px;
+  }
+  .admin-banner-row .banner-text{flex:1;font-size:14px;color:var(--white);}
+
   .admin-user-row{
     display:flex;align-items:center;gap:16px;
     padding:16px 0;border-bottom:1px solid var(--line-soft);
@@ -98,6 +117,19 @@
     padding:8px 14px;border-radius:2px;font-size:13px;cursor:pointer;
   }
   .admin-save-btn:hover{border-color:var(--amber);color:var(--amber);}
+
+  .site-banner{
+    display:flex;align-items:center;justify-content:center;gap:16px;
+    background:var(--amber);color:var(--navy-deep);
+    padding:11px 20px;font-size:13.5px;font-weight:500;
+    position:relative;text-align:center;
+  }
+  .site-banner .close-banner{
+    position:absolute;right:16px;top:50%;transform:translateY(-50%);
+    background:none;border:none;color:var(--navy-deep);
+    font-size:18px;line-height:1;cursor:pointer;opacity:0.7;
+  }
+  .site-banner .close-banner:hover{opacity:1;}
 
   .logo-group{display:flex;align-items:center;gap:14px;}
   .admin-badge{
@@ -608,6 +640,8 @@
 </head>
 <body>
 
+<div id="bannerContainer"></div>
+
 <header>
   <div class="wrap nav">
     <div class="logo-group">
@@ -748,6 +782,23 @@
 
     <div id="adminUserList"></div>
     <div class="modal-note" id="adminPanelMsg" style="margin-top:16px;"></div>
+
+    <h1 style="margin-top:56px;">Discount codes</h1>
+    <div class="admin-add-row">
+      <input type="text" id="newCodeInput" class="account-input" placeholder="CODE" style="max-width:160px;">
+      <input type="number" id="newCodePercent" class="account-input" placeholder="% off" style="max-width:100px;">
+      <button class="admin-save-btn" id="addCodeBtn" type="button">Add code</button>
+    </div>
+    <div id="adminCodeList"></div>
+    <div class="modal-note" id="adminCodeMsg" style="margin-top:12px;"></div>
+
+    <h1 style="margin-top:56px;">Banners</h1>
+    <div class="admin-add-row">
+      <input type="text" id="newBannerInput" class="account-input" placeholder="Banner message" style="flex:1;">
+      <button class="admin-save-btn" id="addBannerBtn" type="button">Add banner</button>
+    </div>
+    <div id="adminBannerList"></div>
+    <div class="modal-note" id="adminBannerMsg" style="margin-top:12px;"></div>
   </div>
 </div>
 
@@ -973,6 +1024,7 @@
 <script>
   const rows = document.querySelectorAll('.material-row');
 
+
   rows.forEach(row => {
     row.addEventListener('click', () => {
       rows.forEach(r => r.classList.remove('active'));
@@ -981,10 +1033,6 @@
   });
 
   const BASE_PRICE = 6.00;
-  const DISCOUNT_CODES = {
-    'PRINT10': 0.10,
-    'WELCOME15': 0.15
-  };
   let selectedColor = 'Black';
   let quantity = 1;
   let cart = [];
@@ -1142,22 +1190,36 @@
   const cartDiscountMsg = document.getElementById('cartDiscountMsg');
   const cartApplyDiscountBtn = document.getElementById('cartApplyDiscount');
   if (cartApplyDiscountBtn){
-    cartApplyDiscountBtn.addEventListener('click', () => {
+    cartApplyDiscountBtn.addEventListener('click', async () => {
       const code = cartDiscountInput.value.trim().toUpperCase();
       if (!code){
         cartDiscountMsg.textContent = '';
         return;
       }
-      if (DISCOUNT_CODES[code]){
-        cartDiscount = DISCOUNT_CODES[code];
-        cartDiscountCode = code;
-        cartDiscountMsg.textContent = `Code applied — ${Math.round(cartDiscount * 100)}% off.`;
-        cartDiscountMsg.style.color = 'var(--amber)';
-      } else {
+      if (!supabaseClient){
+        cartDiscountMsg.textContent = 'Discount codes need Supabase connected.';
+        cartDiscountMsg.style.color = '#E9736B';
+        return;
+      }
+      cartDiscountMsg.textContent = 'Checking code…';
+      cartDiscountMsg.style.color = '#AAB6CC';
+      const { data, error } = await supabaseClient
+        .from('discount_codes')
+        .select('code, percent_off')
+        .eq('code', code)
+        .eq('active', true)
+        .maybeSingle();
+
+      if (error || !data){
         cartDiscount = 0;
         cartDiscountCode = '';
         cartDiscountMsg.textContent = 'That code isn’t valid.';
         cartDiscountMsg.style.color = '#E9736B';
+      } else {
+        cartDiscount = data.percent_off / 100;
+        cartDiscountCode = data.code;
+        cartDiscountMsg.textContent = `Code applied — ${data.percent_off}% off.`;
+        cartDiscountMsg.style.color = 'var(--amber)';
       }
       renderCart();
     });
@@ -1352,6 +1414,29 @@
 
   refreshAuthUI();
 
+  async function loadSiteBanners(){
+    if (!supabaseClient) return;
+    const { data, error } = await supabaseClient
+      .from('banners')
+      .select('*')
+      .eq('active', true)
+      .order('created_at', { ascending: false });
+    if (error || !data) return;
+    const container = document.getElementById('bannerContainer');
+    container.innerHTML = data.map(b => `
+      <div class="site-banner" data-id="${b.id}">
+        <span>${b.message}</span>
+        <button class="close-banner" data-id="${b.id}" aria-label="Dismiss">&times;</button>
+      </div>
+    `).join('');
+    container.querySelectorAll('.close-banner').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.closest('.site-banner').remove();
+      });
+    });
+  }
+  loadSiteBanners();
+
   const adminPanelBtn = document.getElementById('adminPanelBtn');
   const adminPage = document.getElementById('adminPage');
   const closeAdminPage = document.getElementById('closeAdminPage');
@@ -1404,10 +1489,141 @@
     });
   }
 
+  async function loadAdminCodes(){
+    const adminCodeMsg = document.getElementById('adminCodeMsg');
+    const adminCodeList = document.getElementById('adminCodeList');
+    const { data, error } = await supabaseClient
+      .from('discount_codes')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error){
+      adminCodeMsg.textContent = error.message;
+      adminCodeMsg.style.color = '#E9736B';
+      return;
+    }
+    adminCodeMsg.textContent = '';
+    adminCodeList.innerHTML = data.map(c => `
+      <div class="admin-code-row" data-id="${c.id}">
+        <span class="code-name">${c.code}</span>
+        <span class="code-pct">${c.percent_off}% off</span>
+        <span class="code-status">${c.active ? 'active' : 'disabled'}</span>
+        <button class="admin-save-btn toggle-code" data-id="${c.id}" data-active="${c.active}" type="button">
+          ${c.active ? 'Disable' : 'Enable'}
+        </button>
+        <button class="admin-save-btn delete-code" data-id="${c.id}" type="button">Delete</button>
+      </div>
+    `).join('');
+
+    adminCodeList.querySelectorAll('.toggle-code').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const isActive = btn.dataset.active === 'true';
+        await supabaseClient.from('discount_codes').update({ active: !isActive }).eq('id', btn.dataset.id);
+        loadAdminCodes();
+      });
+    });
+    adminCodeList.querySelectorAll('.delete-code').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await supabaseClient.from('discount_codes').delete().eq('id', btn.dataset.id);
+        loadAdminCodes();
+      });
+    });
+  }
+
+  const addCodeBtn = document.getElementById('addCodeBtn');
+  if (addCodeBtn){
+    addCodeBtn.addEventListener('click', async () => {
+      const codeInput = document.getElementById('newCodeInput');
+      const percentInput = document.getElementById('newCodePercent');
+      const adminCodeMsg = document.getElementById('adminCodeMsg');
+      const code = codeInput.value.trim().toUpperCase();
+      const percent = parseFloat(percentInput.value);
+      if (!code || !percent || percent <= 0 || percent > 100){
+        adminCodeMsg.textContent = 'Enter a code and a valid % off (1–100).';
+        adminCodeMsg.style.color = '#E9736B';
+        return;
+      }
+      const { error } = await supabaseClient.from('discount_codes').insert({ code, percent_off: percent });
+      if (error){
+        adminCodeMsg.textContent = error.message;
+        adminCodeMsg.style.color = '#E9736B';
+      } else {
+        codeInput.value = '';
+        percentInput.value = '';
+        loadAdminCodes();
+      }
+    });
+  }
+
+  async function loadAdminBanners(){
+    const adminBannerMsg = document.getElementById('adminBannerMsg');
+    const adminBannerList = document.getElementById('adminBannerList');
+    const { data, error } = await supabaseClient
+      .from('banners')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error){
+      adminBannerMsg.textContent = error.message;
+      adminBannerMsg.style.color = '#E9736B';
+      return;
+    }
+    adminBannerMsg.textContent = '';
+    adminBannerList.innerHTML = data.map(b => `
+      <div class="admin-banner-row" data-id="${b.id}">
+        <span class="banner-text">${b.message}</span>
+        <span class="banner-status">${b.active ? 'active' : 'disabled'}</span>
+        <button class="admin-save-btn toggle-banner" data-id="${b.id}" data-active="${b.active}" type="button">
+          ${b.active ? 'Disable' : 'Enable'}
+        </button>
+        <button class="admin-save-btn delete-banner" data-id="${b.id}" type="button">Delete</button>
+      </div>
+    `).join('');
+
+    adminBannerList.querySelectorAll('.toggle-banner').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const isActive = btn.dataset.active === 'true';
+        await supabaseClient.from('banners').update({ active: !isActive }).eq('id', btn.dataset.id);
+        loadAdminBanners();
+        loadSiteBanners();
+      });
+    });
+    adminBannerList.querySelectorAll('.delete-banner').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await supabaseClient.from('banners').delete().eq('id', btn.dataset.id);
+        loadAdminBanners();
+        loadSiteBanners();
+      });
+    });
+  }
+
+  const addBannerBtn = document.getElementById('addBannerBtn');
+  if (addBannerBtn){
+    addBannerBtn.addEventListener('click', async () => {
+      const bannerInput = document.getElementById('newBannerInput');
+      const adminBannerMsg = document.getElementById('adminBannerMsg');
+      const message = bannerInput.value.trim();
+      if (!message){
+        adminBannerMsg.textContent = 'Enter a message first.';
+        adminBannerMsg.style.color = '#E9736B';
+        return;
+      }
+      const { error } = await supabaseClient.from('banners').insert({ message });
+      if (error){
+        adminBannerMsg.textContent = error.message;
+        adminBannerMsg.style.color = '#E9736B';
+      } else {
+        bannerInput.value = '';
+        loadAdminBanners();
+        loadSiteBanners();
+      }
+    });
+  }
+
   function openAdminPage(){
     adminPage.classList.add('active');
     document.body.style.overflow = 'hidden';
     loadAdminUsers();
+    loadAdminCodes();
+    loadAdminBanners();
   }
   function closeAdminPageFn(){
     adminPage.classList.remove('active');
