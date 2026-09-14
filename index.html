@@ -158,6 +158,33 @@
     font-size:20px;margin-bottom:10px;color:var(--white);
   }
 
+  .design-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+    gap:24px;max-width:900px;
+  }
+  .design-card{
+    border:1px solid var(--line-soft);
+    background:var(--navy-panel);
+  }
+  .design-image-placeholder{
+    aspect-ratio:1/1;
+    border-bottom:1px dashed #4A5C82;
+    display:flex;align-items:center;justify-content:center;
+    background:repeating-linear-gradient(45deg, #16233D, #16233D 10px, #1B2A47 10px, #1B2A47 20px);
+  }
+  .design-image-placeholder span{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber);
+    letter-spacing:0.04em;
+  }
+  .design-card-body{padding:22px 22px 24px;}
+  .design-card-body h3{font-size:18px;margin-bottom:8px;}
+  .design-card-body p{font-size:14px;color:#AAB6CC;margin:0 0 14px;}
+  .design-tags{display:flex;gap:8px;}
+  .tag{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--line);
+    border:1px solid var(--line-soft);padding:3px 8px;border-radius:2px;
+  }
+
   .printer3d{
     width:150px;height:128px;margin:0 auto 22px;perspective:600px;
   }
@@ -434,7 +461,31 @@
 </section>
 
 <section id="designs">
-  <div class="wrap" style="display:flex;justify-content:center;">
+  <div class="wrap">
+    <div class="section-head" style="margin-bottom:40px;">
+      <div class="kicker"><div class="reg"></div>THE CATALOG</div>
+      <h2>Available designs</h2>
+      <p>Our own designs, ready to print in any material off the menu.</p>
+    </div>
+
+    <div class="design-grid">
+      <div class="design-card">
+        <div class="design-image-placeholder">
+          <span>PHOTO PENDING</span>
+        </div>
+        <div class="design-card-body">
+          <h3>Spiral Fidget Cone</h3>
+          <p>A tactile spiral-ribbed cone that twists and clicks in the hand — a satisfying desk fidget for restless fingers.</p>
+          <div class="design-tags">
+            <span class="tag">PLA</span>
+          </div>
+          <a href="#order" class="btn-ghost" style="display:inline-block;margin-top:16px;">Order this design →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap" style="display:flex;justify-content:center;margin-top:56px;">
     <div class="empty-state">
       <div class="printer3d">
         <div class="printer3d-inner">
@@ -475,8 +526,8 @@
           </div>
         </div>
       </div>
-      <h3>No open models right now.</h3>
-      <p>Maybe upload a reference photo for our team to make a custom print?</p>
+      <h3>More designs on the way.</h3>
+      <p>Got something specific in mind? Upload a reference photo for our team to make a custom print.</p>
       <label class="upload-btn" for="refPhoto">
         Upload a reference photo
         <input type="file" id="refPhoto" accept="image/*" hidden>
