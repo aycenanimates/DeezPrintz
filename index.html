@@ -86,6 +86,14 @@
     border-radius:2px;text-decoration:none;
   }
 
+  .icon-btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:38px;height:38px;
+    background:none;border:1px solid var(--line-soft);color:var(--white);
+    border-radius:2px;cursor:pointer;
+  }
+  .icon-btn:hover{border-color:var(--amber);color:var(--amber);}
+
   .cart-btn{
     display:none;
     align-items:center;gap:8px;
@@ -96,13 +104,59 @@
   .cart-btn.visible{display:inline-flex;}
   .cart-btn svg{flex-shrink:0;}
 
-  .cart-page{
-    display:none;
+  .account-page{
     position:fixed;inset:0;z-index:60;
     background:var(--navy-deep);
     overflow-y:auto;
+    transform:translateX(100%);
+    pointer-events:none;
+    transition:transform .5s cubic-bezier(.16,.84,.44,1);
   }
-  .cart-page.active{display:block;}
+  .account-page.active{
+    transform:translateX(0);
+    pointer-events:auto;
+  }
+  .account-body{
+    display:flex;align-items:center;justify-content:center;
+    min-height:calc(100vh - 78px);
+    padding:48px 24px;
+  }
+  .account-card{
+    width:100%;max-width:380px;
+    background:var(--navy-panel);
+    border:1px solid var(--line-soft);
+    border-radius:2px;
+    padding:32px 28px;
+  }
+  .account-tabs{
+    display:flex;border:1px solid var(--line-soft);border-radius:2px;
+    margin-bottom:26px;overflow:hidden;
+  }
+  .account-tab{
+    flex:1;background:none;border:none;color:#AAB6CC;
+    padding:11px;font-size:14px;font-weight:500;cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .account-tab.active{background:var(--amber);color:var(--navy-deep);}
+  .account-input{
+    width:100%;padding:11px 12px;background:var(--navy-deep);
+    border:1px solid var(--line-soft);color:var(--white);
+    font-family:'Inter',sans-serif;font-size:14.5px;border-radius:2px;
+  }
+  .account-input:focus{outline:1px solid var(--amber);}
+
+  .cart-page{
+    position:fixed;inset:0;z-index:60;
+    background:var(--navy-deep);
+    overflow-y:auto;
+    transform:translateX(100%);
+    pointer-events:none;
+    transition:transform .5s cubic-bezier(.16,.84,.44,1);
+  }
+  .cart-page.active{
+    transform:translateX(0);
+    pointer-events:auto;
+  }
   .cart-page-header{
     border-bottom:1px solid var(--line-soft);
     position:sticky;top:0;background:var(--navy-deep);z-index:2;
@@ -517,6 +571,7 @@
   }
   @media (prefers-reduced-motion: reduce){
     html{scroll-behavior:auto;}
+    .cart-page,.account-page{transition:none;}
   }
 </style>
 </head>
@@ -529,7 +584,12 @@
       <a href="#order">Materials</a>
       <a href="#how">How it works</a>
     </nav>
-    <a href="#order" class="nav-cta" id="navCta">Start an order</a>
+    <button class="icon-btn" id="accountBtn" aria-label="Account">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="12" cy="8" r="3.6"/>
+        <path d="M4.5 20c1.4-3.8 4.4-5.8 7.5-5.8s6.1 2 7.5 5.8"/>
+      </svg>
+    </button>
     <button class="cart-btn" id="cartBtn" aria-label="View cart">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
         <circle cx="9" cy="21" r="1.4" fill="currentColor" stroke="none"/>
@@ -538,6 +598,7 @@
       </svg>
       <span id="cartCount">0</span>
     </button>
+    <a href="#order" class="nav-cta" id="navCta">Start an order</a>
   </div>
 </header>
 
@@ -582,6 +643,59 @@
         <span id="cartPageTotal">$0.00</span>
       </div>
       <button class="btn-order-confirm" id="checkoutBtn">Checkout</button>
+    </div>
+  </div>
+</div>
+
+<div class="account-page" id="accountPage">
+  <div class="cart-page-header">
+    <div class="wrap cart-page-header-inner">
+      <div class="logo"><div class="reg"></div>DEEZPRINTZ</div>
+      <button class="cart-page-close" id="closeAccountPage" aria-label="Close">&times; Close</button>
+    </div>
+  </div>
+
+  <div class="account-body">
+    <div class="account-card">
+      <div class="account-tabs" id="accountTabs">
+        <button class="account-tab active" id="tabLogin" type="button">Log In</button>
+        <button class="account-tab" id="tabSignup" type="button">Sign Up</button>
+      </div>
+
+      <div class="account-form" id="accountLoggedIn" style="display:none;">
+        <p style="color:#AAB6CC;font-size:14px;margin-bottom:20px;">Signed in as <span id="loggedInEmail" style="color:var(--white);"></span></p>
+        <button class="btn-order-confirm" id="logoutBtn" type="button">Log Out</button>
+      </div>
+
+      <form class="account-form" id="loginForm">
+        <div class="modal-field">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" class="account-input" placeholder="you@email.com" required>
+        </div>
+        <div class="modal-field">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" class="account-input" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn-order-confirm">Log In</button>
+        <div class="modal-note" id="loginMsg" style="text-align:center;margin-top:10px;"></div>
+      </form>
+
+      <form class="account-form" id="signupForm" style="display:none;">
+        <div class="modal-field">
+          <label for="signupName">Name</label>
+          <input type="text" id="signupName" class="account-input" placeholder="Your name" required>
+        </div>
+        <div class="modal-field">
+          <label for="signupEmail">Email</label>
+          <input type="email" id="signupEmail" class="account-input" placeholder="you@email.com" required>
+        </div>
+        <div class="modal-field">
+          <label for="signupPassword">Password</label>
+          <input type="password" id="signupPassword" class="account-input" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn-order-confirm">Create Account</button>
+        <div class="modal-note" id="signupMsg" style="text-align:center;margin-top:10px;"></div>
+      </form>
     </div>
   </div>
 </div>
@@ -803,6 +917,8 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
   const rows = document.querySelectorAll('.material-row');
 
@@ -844,6 +960,7 @@
     if (e.key === 'Escape'){
       closeModal();
       if (cartPage) cartPage.classList.remove('active');
+      if (accountPage) accountPage.classList.remove('active');
       document.body.style.overflow = '';
     }
   });
@@ -1029,6 +1146,140 @@
 
   updatePriceDisplay();
   renderCart();
+
+  // --- Supabase setup ---
+  // 1. Create a free project at https://supabase.com
+  // 2. In Project Settings -> API, copy the "Project URL" and "anon public" key below.
+  // 3. In Authentication -> Providers, make sure Email is enabled.
+  const SUPABASE_URL = 'https://gekdnolqraemzhxwgyno.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdla2Rub2xxcmFlbXpoeHdneW5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MTYyNzAsImV4cCI6MjEwNDk5MjI3MH0.h1A0cgdOYBrKBhR5fF-P-XjPSUwj8lqRu1kFi240tR8';
+  const supabaseClient = (SUPABASE_URL.startsWith('http') && window.supabase)
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
+
+  const accountBtn = document.getElementById('accountBtn');
+  const accountPage = document.getElementById('accountPage');
+  const closeAccountPage = document.getElementById('closeAccountPage');
+  const accountTabs = document.getElementById('accountTabs');
+  const tabLogin = document.getElementById('tabLogin');
+  const tabSignup = document.getElementById('tabSignup');
+  const loginForm = document.getElementById('loginForm');
+  const signupForm = document.getElementById('signupForm');
+  const accountLoggedIn = document.getElementById('accountLoggedIn');
+  const loggedInEmail = document.getElementById('loggedInEmail');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  function openAccountPage(){
+    accountPage.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeAccountPageFn(){
+    accountPage.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  if (accountBtn) accountBtn.addEventListener('click', openAccountPage);
+  if (closeAccountPage) closeAccountPage.addEventListener('click', closeAccountPageFn);
+
+  function showLoginTab(){
+    tabLogin.classList.add('active');
+    tabSignup.classList.remove('active');
+    loginForm.style.display = 'block';
+    signupForm.style.display = 'none';
+  }
+  function showSignupTab(){
+    tabSignup.classList.add('active');
+    tabLogin.classList.remove('active');
+    signupForm.style.display = 'block';
+    loginForm.style.display = 'none';
+  }
+  function showAuthTabs(){
+    accountTabs.style.display = 'flex';
+    accountLoggedIn.style.display = 'none';
+    showLoginTab();
+  }
+  function showLoggedInView(user){
+    accountTabs.style.display = 'none';
+    loginForm.style.display = 'none';
+    signupForm.style.display = 'none';
+    accountLoggedIn.style.display = 'block';
+    loggedInEmail.textContent = user.email;
+  }
+  if (tabLogin) tabLogin.addEventListener('click', showLoginTab);
+  if (tabSignup) tabSignup.addEventListener('click', showSignupTab);
+
+  async function refreshAuthUI(){
+    if (!supabaseClient) return;
+    const { data } = await supabaseClient.auth.getSession();
+    if (data.session){
+      showLoggedInView(data.session.user);
+    } else {
+      showAuthTabs();
+    }
+  }
+
+  if (loginForm){
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msgEl = document.getElementById('loginMsg');
+      if (!supabaseClient){
+        msgEl.style.color = '#E9736B';
+        msgEl.textContent = 'Add your Supabase URL and anon key in the script to enable this.';
+        return;
+      }
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      msgEl.style.color = 'var(--amber)';
+      msgEl.textContent = 'Logging in…';
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error){
+        msgEl.style.color = '#E9736B';
+        msgEl.textContent = error.message;
+      } else {
+        msgEl.textContent = '';
+        showLoggedInView(data.user);
+      }
+    });
+  }
+
+  if (signupForm){
+    signupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msgEl = document.getElementById('signupMsg');
+      if (!supabaseClient){
+        msgEl.style.color = '#E9736B';
+        msgEl.textContent = 'Add your Supabase URL and anon key in the script to enable this.';
+        return;
+      }
+      const fullName = document.getElementById('signupName').value;
+      const email = document.getElementById('signupEmail').value;
+      const password = document.getElementById('signupPassword').value;
+      msgEl.style.color = 'var(--amber)';
+      msgEl.textContent = 'Creating account…';
+      const { data, error } = await supabaseClient.auth.signUp({
+        email, password,
+        options: { data: { full_name: fullName } }
+      });
+      if (error){
+        msgEl.style.color = '#E9736B';
+        msgEl.textContent = error.message;
+      } else if (data.session){
+        msgEl.textContent = '';
+        showLoggedInView(data.user);
+      } else {
+        msgEl.style.color = 'var(--amber)';
+        msgEl.textContent = 'Check your email to confirm your account, then log in.';
+      }
+    });
+  }
+
+  if (logoutBtn){
+    logoutBtn.addEventListener('click', async () => {
+      if (supabaseClient) await supabaseClient.auth.signOut();
+      showAuthTabs();
+    });
+  }
+
+  refreshAuthUI();
 
   const refPhoto = document.getElementById('refPhoto');
   const refPhotoName = document.getElementById('refPhotoName');
