@@ -1722,6 +1722,7 @@
     const { data, error } = await supabaseClient
       .from('orders')
       .select('*')
+      .eq('done', false)
       .order('created_at', { ascending: false });
     if (error){
       adminOrderMsg.textContent = error.message;
@@ -1730,7 +1731,7 @@
     }
     adminOrderMsg.textContent = '';
     if (!data.length){
-      adminOrderList.innerHTML = '<p style="color:#8493AF;font-size:14px;">No orders yet.</p>';
+      adminOrderList.innerHTML = '<p style="color:#8493AF;font-size:14px;">No open orders.</p>';
       return;
     }
 
@@ -1759,6 +1760,7 @@
             <option value="cancelled" ${o.status === 'cancelled' ? 'selected' : ''}>cancelled</option>
           </select>
           <button class="admin-save-btn save-order" data-id="${o.id}" type="button">Save</button>
+          <button class="admin-save-btn done-order" data-id="${o.id}" type="button">Done!</button>
         </div>
       `;
     }).join('');
@@ -1772,6 +1774,25 @@
           .from('orders').update({ status }).eq('id', id).select();
         btn.textContent = (updateError || !updated || !updated.length) ? 'Failed' : 'Saved';
         setTimeout(() => { btn.textContent = 'Save'; }, 1500);
+      });
+    });
+
+    adminOrderList.querySelectorAll('.done-order').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        btn.textContent = '…';
+        const { data: updated, error: doneError } = await supabaseClient
+          .from('orders').update({ done: true }).eq('id', id).select();
+        if (doneError || !updated || !updated.length){
+          btn.textContent = 'Failed';
+          setTimeout(() => { btn.textContent = 'Done!'; }, 1500);
+          return;
+        }
+        const row = adminOrderList.querySelector(`.admin-order-row[data-id="${id}"]`);
+        if (row) row.remove();
+        if (!adminOrderList.children.length){
+          adminOrderList.innerHTML = '<p style="color:#8493AF;font-size:14px;">No open orders.</p>';
+        }
       });
     });
   }
