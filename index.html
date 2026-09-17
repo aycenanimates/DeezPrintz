@@ -77,6 +77,26 @@
     font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;
     letter-spacing:-0.01em;
   }
+  .admin-order-row{
+    display:flex;align-items:flex-start;gap:16px;
+    padding:18px 0;border-bottom:1px solid var(--line-soft);
+  }
+  .admin-order-row .order-main{flex:1;}
+  .admin-order-row .order-top{
+    display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:6px;
+  }
+  .admin-order-row .order-name{
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15.5px;
+  }
+  .admin-order-row .order-total{
+    font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--amber);
+  }
+  .admin-order-row .order-items{font-size:13.5px;color:#C7D0E0;margin-bottom:8px;}
+  .admin-order-row .order-address{font-size:12.5px;color:#8493AF;line-height:1.6;}
+  .admin-order-row .order-date{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5C7096;margin-top:8px;
+  }
+
   .admin-add-row{
     display:flex;gap:10px;margin:20px 0 24px;
   }
@@ -130,6 +150,14 @@
     font-size:18px;line-height:1;cursor:pointer;opacity:0.7;
   }
   .site-banner .close-banner:hover{opacity:1;}
+
+  .paywall-section-label{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--amber);
+    letter-spacing:0.05em;margin-bottom:14px;
+  }
+  #paywallOverlay .order-modal{
+    max-height:88vh;overflow-y:auto;
+  }
 
   .paywall-total{
     display:flex;justify-content:space-between;align-items:baseline;
@@ -794,6 +822,10 @@
     <div id="adminUserList"></div>
     <div class="modal-note" id="adminPanelMsg" style="margin-top:16px;"></div>
 
+    <h1 style="margin-top:56px;">Orders</h1>
+    <div id="adminOrderList"></div>
+    <div class="modal-note" id="adminOrderMsg" style="margin-top:12px;"></div>
+
     <h1 style="margin-top:56px;">Discount codes</h1>
     <div class="admin-add-row">
       <input type="text" id="newCodeInput" class="account-input" placeholder="CODE" style="max-width:160px;">
@@ -946,6 +978,43 @@
       </div>
 
       <form id="paymentForm">
+        <div class="paywall-section-label">SHIPPING DETAILS</div>
+        <div class="modal-field">
+          <label for="shipName">Full name</label>
+          <input type="text" id="shipName" class="account-input" placeholder="Jane Maker" required>
+        </div>
+        <div class="modal-field">
+          <label for="shipEmail">Email</label>
+          <input type="email" id="shipEmail" class="account-input" placeholder="you@email.com" required>
+        </div>
+        <div class="modal-field">
+          <label for="shipPhone">Phone (optional)</label>
+          <input type="tel" id="shipPhone" class="account-input" placeholder="555-555-5555">
+        </div>
+        <div class="modal-field">
+          <label for="shipAddress1">Address</label>
+          <input type="text" id="shipAddress1" class="account-input" placeholder="123 Main St" required>
+        </div>
+        <div class="modal-field">
+          <label for="shipAddress2">Apt / Suite (optional)</label>
+          <input type="text" id="shipAddress2" class="account-input" placeholder="Apt 4B">
+        </div>
+        <div class="paywall-row">
+          <div class="modal-field" style="flex:1.4;">
+            <label for="shipCity">City</label>
+            <input type="text" id="shipCity" class="account-input" placeholder="Parkersburg" required>
+          </div>
+          <div class="modal-field" style="flex:0.8;">
+            <label for="shipState">State</label>
+            <input type="text" id="shipState" class="account-input" placeholder="WV">
+          </div>
+          <div class="modal-field" style="flex:1;">
+            <label for="shipZip">ZIP</label>
+            <input type="text" id="shipZip" class="account-input" placeholder="26101" required>
+          </div>
+        </div>
+
+        <div class="paywall-section-label" style="margin-top:22px;">PAYMENT</div>
         <div class="modal-field">
           <label for="cardName">Name on card</label>
           <input type="text" id="cardName" class="account-input" placeholder="Jane Maker" required>
@@ -1340,7 +1409,7 @@
   }
 
   if (paymentForm){
-    paymentForm.addEventListener('submit', (e) => {
+    paymentForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const digits = cardNumberInput.value.replace(/\D/g, '');
       if (digits.length < 15){
@@ -1348,22 +1417,53 @@
         paymentMsg.style.color = '#E9736B';
         return;
       }
+
       payBtn.disabled = true;
       payBtn.textContent = 'Processing…';
-      setTimeout(() => {
-        paymentMsg.style.color = 'var(--amber)';
-        paymentMsg.textContent = 'Payment successful — your order is in the queue.';
-        payBtn.textContent = 'Paid';
-        cart = [];
-        cartDiscount = 0;
-        cartDiscountCode = '';
-        renderCart();
-        setTimeout(() => {
-          paywallOverlay.classList.remove('active');
+      paymentMsg.textContent = '';
+
+      const total = cartTotalValue();
+      const orderPayload = {
+        email: document.getElementById('shipEmail').value.trim(),
+        full_name: document.getElementById('shipName').value.trim(),
+        phone: document.getElementById('shipPhone').value.trim() || null,
+        address_line1: document.getElementById('shipAddress1').value.trim(),
+        address_line2: document.getElementById('shipAddress2').value.trim() || null,
+        city: document.getElementById('shipCity').value.trim(),
+        state: document.getElementById('shipState').value.trim() || null,
+        postal_code: document.getElementById('shipZip').value.trim(),
+        items: cart.map(i => ({ design:'Spiral Fidget Cone', color:i.color, quantity:i.quantity, unit_price:i.unitPrice })),
+        discount_code: cartDiscountCode || null,
+        total: Number(total.toFixed(2))
+      };
+
+      if (supabaseClient){
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        if (sessionData && sessionData.session){
+          orderPayload.user_id = sessionData.session.user.id;
+        }
+        const { error: orderError } = await supabaseClient.from('orders').insert(orderPayload);
+        if (orderError){
+          paymentMsg.textContent = orderError.message;
+          paymentMsg.style.color = '#E9736B';
           payBtn.disabled = false;
-          paymentForm.reset();
-        }, 1800);
-      }, 1200);
+          payBtn.textContent = `Pay $${total.toFixed(2)}`;
+          return;
+        }
+      }
+
+      paymentMsg.style.color = 'var(--amber)';
+      paymentMsg.textContent = 'Payment successful — your order is in the queue.';
+      payBtn.textContent = 'Paid';
+      cart = [];
+      cartDiscount = 0;
+      cartDiscountCode = '';
+      renderCart();
+      setTimeout(() => {
+        paywallOverlay.classList.remove('active');
+        payBtn.disabled = false;
+        paymentForm.reset();
+      }, 1800);
     });
   }
 
@@ -1611,6 +1711,66 @@
     });
   }
 
+  async function loadAdminOrders(){
+    const adminOrderMsg = document.getElementById('adminOrderMsg');
+    const adminOrderList = document.getElementById('adminOrderList');
+    const { data, error } = await supabaseClient
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error){
+      adminOrderMsg.textContent = error.message;
+      adminOrderMsg.style.color = '#E9736B';
+      return;
+    }
+    adminOrderMsg.textContent = '';
+    if (!data.length){
+      adminOrderList.innerHTML = '<p style="color:#8493AF;font-size:14px;">No orders yet.</p>';
+      return;
+    }
+
+    adminOrderList.innerHTML = data.map(o => {
+      const items = (o.items || []).map(i => `${i.quantity}× ${i.color} ${i.design}`).join(', ');
+      const date = new Date(o.created_at).toLocaleDateString();
+      return `
+        <div class="admin-order-row" data-id="${o.id}">
+          <div class="order-main">
+            <div class="order-top">
+              <span class="order-name">${o.full_name}</span>
+              <span class="order-total">$${Number(o.total).toFixed(2)}</span>
+            </div>
+            <div class="order-items">${items}${o.discount_code ? ` · code ${o.discount_code}` : ''}</div>
+            <div class="order-address">
+              ${o.address_line1}${o.address_line2 ? ', ' + o.address_line2 : ''}<br>
+              ${o.city}${o.state ? ', ' + o.state : ''} ${o.postal_code}<br>
+              ${o.email}${o.phone ? ' · ' + o.phone : ''}
+            </div>
+            <div class="order-date">${date}</div>
+          </div>
+          <select class="admin-role-select order-status" data-id="${o.id}">
+            <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>pending</option>
+            <option value="printing" ${o.status === 'printing' ? 'selected' : ''}>printing</option>
+            <option value="shipped" ${o.status === 'shipped' ? 'selected' : ''}>shipped</option>
+            <option value="cancelled" ${o.status === 'cancelled' ? 'selected' : ''}>cancelled</option>
+          </select>
+          <button class="admin-save-btn save-order" data-id="${o.id}" type="button">Save</button>
+        </div>
+      `;
+    }).join('');
+
+    adminOrderList.querySelectorAll('.save-order').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const status = adminOrderList.querySelector(`.order-status[data-id="${id}"]`).value;
+        btn.textContent = 'Saving…';
+        const { data: updated, error: updateError } = await supabaseClient
+          .from('orders').update({ status }).eq('id', id).select();
+        btn.textContent = (updateError || !updated || !updated.length) ? 'Failed' : 'Saved';
+        setTimeout(() => { btn.textContent = 'Save'; }, 1500);
+      });
+    });
+  }
+
   async function loadAdminCodes(){
     const adminCodeMsg = document.getElementById('adminCodeMsg');
     const adminCodeList = document.getElementById('adminCodeList');
@@ -1794,6 +1954,7 @@
     adminPage.classList.add('active');
     document.body.style.overflow = 'hidden';
     loadAdminUsers();
+    loadAdminOrders();
     loadAdminCodes();
     loadAdminBanners();
   }
