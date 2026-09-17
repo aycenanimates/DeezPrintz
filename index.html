@@ -159,6 +159,13 @@
     max-height:88vh;overflow-y:auto;
   }
 
+  .venmo-btn{
+    background:#3D95CE !important;color:#fff !important;
+  }
+  .venmo-btn:hover{background:#2C7DB3 !important;}
+
+  #paywallOverlay{z-index:80;}
+
   .paywall-total{
     display:flex;justify-content:space-between;align-items:baseline;
     padding:14px 0 18px;margin-bottom:8px;
@@ -1015,26 +1022,11 @@
         </div>
 
         <div class="paywall-section-label" style="margin-top:22px;">PAYMENT</div>
-        <div class="modal-field">
-          <label for="cardName">Name on card</label>
-          <input type="text" id="cardName" class="account-input" placeholder="Jane Maker" required>
-        </div>
-        <div class="modal-field">
-          <label for="cardNumber">Card number</label>
-          <input type="text" id="cardNumber" class="account-input" placeholder="4242 4242 4242 4242" inputmode="numeric" maxlength="19" required>
-        </div>
-        <div class="paywall-row">
-          <div class="modal-field" style="flex:1;">
-            <label for="cardExpiry">Expiry</label>
-            <input type="text" id="cardExpiry" class="account-input" placeholder="MM/YY" maxlength="5" required>
-          </div>
-          <div class="modal-field" style="flex:1;">
-            <label for="cardCvc">CVC</label>
-            <input type="text" id="cardCvc" class="account-input" placeholder="123" inputmode="numeric" maxlength="4" required>
-          </div>
-        </div>
+        <p style="font-size:13.5px;color:#AAB6CC;margin:0 0 18px;">
+          Confirm your shipping details, then pay with Venmo. We'll mark your order as paid once it comes through.
+        </p>
 
-        <button type="submit" class="btn-order-confirm" id="payBtn">Pay</button>
+        <button type="submit" class="btn-order-confirm venmo-btn" id="payBtn">Pay with Venmo</button>
         <div class="modal-note" id="paymentMsg" style="text-align:center;margin-top:10px;"></div>
       </form>
     </div>
@@ -1388,38 +1380,15 @@
 
   // Light input formatting
   const cardNumberInput = document.getElementById('cardNumber');
-  if (cardNumberInput){
-    cardNumberInput.addEventListener('input', () => {
-      const digits = cardNumberInput.value.replace(/\D/g, '').slice(0, 16);
-      cardNumberInput.value = digits.replace(/(.{4})/g, '$1 ').trim();
-    });
-  }
-  const cardExpiryInput = document.getElementById('cardExpiry');
-  if (cardExpiryInput){
-    cardExpiryInput.addEventListener('input', () => {
-      const digits = cardExpiryInput.value.replace(/\D/g, '').slice(0, 4);
-      cardExpiryInput.value = digits.length > 2 ? `${digits.slice(0,2)}/${digits.slice(2)}` : digits;
-    });
-  }
-  const cardCvcInput = document.getElementById('cardCvc');
-  if (cardCvcInput){
-    cardCvcInput.addEventListener('input', () => {
-      cardCvcInput.value = cardCvcInput.value.replace(/\D/g, '').slice(0, 4);
-    });
-  }
+  // Venmo username for checkout redirects
+  const VENMO_USERNAME = 'DeezPrintz';
 
   if (paymentForm){
     paymentForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const digits = cardNumberInput.value.replace(/\D/g, '');
-      if (digits.length < 15){
-        paymentMsg.textContent = 'Enter a valid card number.';
-        paymentMsg.style.color = '#E9736B';
-        return;
-      }
 
       payBtn.disabled = true;
-      payBtn.textContent = 'Processing…';
+      payBtn.textContent = 'Saving order…';
       paymentMsg.textContent = '';
 
       const total = cartTotalValue();
@@ -1434,7 +1403,9 @@
         postal_code: document.getElementById('shipZip').value.trim(),
         items: cart.map(i => ({ design:'Spiral Fidget Cone', color:i.color, quantity:i.quantity, unit_price:i.unitPrice })),
         discount_code: cartDiscountCode || null,
-        total: Number(total.toFixed(2))
+        total: Number(total.toFixed(2)),
+        payment_method: 'venmo',
+        paid: false
       };
 
       if (supabaseClient){
@@ -1447,23 +1418,29 @@
           paymentMsg.textContent = orderError.message;
           paymentMsg.style.color = '#E9736B';
           payBtn.disabled = false;
-          payBtn.textContent = `Pay $${total.toFixed(2)}`;
+          payBtn.textContent = 'Pay with Venmo';
           return;
         }
       }
 
+      const note = `DeezPrintz order — ${orderPayload.items.map(i => `${i.quantity}x ${i.color}`).join(', ')}`;
+      const venmoUrl = `https://account.venmo.com/u/${VENMO_USERNAME}?txn=pay&amount=${total.toFixed(2)}&note=${encodeURIComponent(note)}`;
+
       paymentMsg.style.color = 'var(--amber)';
-      paymentMsg.textContent = 'Payment successful — your order is in the queue.';
-      payBtn.textContent = 'Paid';
+      paymentMsg.textContent = 'Order saved — opening Venmo to complete payment…';
       cart = [];
       cartDiscount = 0;
       cartDiscountCode = '';
       renderCart();
+      window.open(venmoUrl, '_blank');
+
       setTimeout(() => {
         paywallOverlay.classList.remove('active');
         payBtn.disabled = false;
+        payBtn.textContent = 'Pay with Venmo';
         paymentForm.reset();
-      }, 1800);
+        paymentMsg.textContent = '';
+      }, 2200);
     });
   }
 
