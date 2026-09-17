@@ -165,6 +165,7 @@
   .venmo-btn:hover{background:#2C7DB3 !important;}
 
   #paywallOverlay{z-index:80;}
+  #confirmOverlay{z-index:90;}
 
   .paywall-total{
     display:flex;justify-content:space-between;align-items:baseline;
@@ -973,6 +974,23 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="confirmOverlay">
+    <div class="order-modal" style="text-align:center;">
+      <div class="modal-kicker">ORDER RECEIVED</div>
+      <h3>We've sent you to Venmo</h3>
+      <p style="font-size:14px;color:#AAB6CC;margin:0 0 22px;">
+        Balance due: <strong style="color:var(--white);font-size:18px;" id="confirmAmount">$0.00</strong>
+      </p>
+      <p style="font-size:13.5px;color:#AAB6CC;margin:0 0 12px;">
+        You'll get a confirmation email once your order is processed.
+      </p>
+      <p style="font-size:12.5px;color:#8493AF;margin:0 0 26px;">
+        Already paid on Venmo? You can disregard this — no need to do anything else.
+      </p>
+      <button class="btn-order-confirm" id="backHomeBtn">Back to Home</button>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="paywallOverlay">
     <div class="order-modal">
       <button class="modal-close" id="closePaywall" aria-label="Close">&times;</button>
@@ -1348,6 +1366,7 @@
   if (cartEmptyBrowse) cartEmptyBrowse.addEventListener('click', closeCartPageFn);
   const checkoutBtn = document.getElementById('checkoutBtn');
   const paywallOverlay = document.getElementById('paywallOverlay');
+  const confirmOverlay = document.getElementById('confirmOverlay');
   const closePaywall = document.getElementById('closePaywall');
   const paywallAmount = document.getElementById('paywallAmount');
   const paymentForm = document.getElementById('paymentForm');
@@ -1426,21 +1445,30 @@
       const note = `DeezPrintz order — ${orderPayload.items.map(i => `${i.quantity}x ${i.color}`).join(', ')}`;
       const venmoUrl = `https://account.venmo.com/u/${VENMO_USERNAME}?txn=pay&amount=${total.toFixed(2)}&note=${encodeURIComponent(note)}`;
 
-      paymentMsg.style.color = 'var(--amber)';
-      paymentMsg.textContent = 'Order saved — opening Venmo to complete payment…';
       cart = [];
       cartDiscount = 0;
       cartDiscountCode = '';
       renderCart();
       window.open(venmoUrl, '_blank');
 
-      setTimeout(() => {
-        paywallOverlay.classList.remove('active');
-        payBtn.disabled = false;
-        payBtn.textContent = 'Pay with Venmo';
-        paymentForm.reset();
-        paymentMsg.textContent = '';
-      }, 2200);
+      payBtn.disabled = false;
+      payBtn.textContent = 'Pay with Venmo';
+      paymentForm.reset();
+      paymentMsg.textContent = '';
+
+      paywallOverlay.classList.remove('active');
+      cartPage.classList.remove('active');
+      document.getElementById('confirmAmount').textContent = `$${total.toFixed(2)}`;
+      confirmOverlay.classList.add('active');
+    });
+  }
+
+  const backHomeBtn = document.getElementById('backHomeBtn');
+  if (backHomeBtn){
+    backHomeBtn.addEventListener('click', () => {
+      confirmOverlay.classList.remove('active');
+      document.body.style.overflow = '';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   }
 
