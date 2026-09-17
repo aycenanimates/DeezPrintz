@@ -1059,11 +1059,11 @@
       <div class="modal-field">
         <label>Color (PLA)</label>
         <div class="color-select">
-          <button class="color-select-dot active" style="background:#1A1A1A;" data-color="Black" title="Black"></button>
-          <button class="color-select-dot" style="background:#1F3A5F;" data-color="Dark blue" title="Dark blue"></button>
-          <button class="color-select-dot" style="background:#F4F2ED;" data-color="White" title="White"></button>
+          <button class="color-select-dot active" style="background:linear-gradient(90deg, #1A1A1A 50%, #F4F2ED 50%);" data-color="Black &amp; White" title="Black &amp; White"></button>
+          <button class="color-select-dot" style="background:linear-gradient(90deg, #1F3A5F 50%, #F4F2ED 50%);" data-color="Dark Blue &amp; White" title="Dark Blue &amp; White"></button>
+          <button class="color-select-dot" style="background:linear-gradient(90deg, #1A1A1A 50%, #1F3A5F 50%);" data-color="Black &amp; Dark Blue" title="Black &amp; Dark Blue"></button>
         </div>
-        <div class="modal-note" id="colorLabel">Selected: Black</div>
+        <div class="modal-note" id="colorLabel">Selected: Black &amp; White</div>
       </div>
 
       <div class="modal-field">
@@ -1160,7 +1160,7 @@
   });
 
   const BASE_PRICE = 6.00;
-  let selectedColor = 'Black';
+  let selectedColor = 'Black & White';
   let quantity = 1;
   let cart = [];
   let cartDiscount = 0;
@@ -1230,7 +1230,11 @@
   const cartSubtotalEl = document.getElementById('cartSubtotal');
   const cartPageTotalEl = document.getElementById('cartPageTotal');
 
-  const COLOR_HEX = { 'Black':'#1A1A1A', 'Dark blue':'#1F3A5F', 'White':'#F4F2ED' };
+  const COLOR_HEX = {
+    'Black & White': 'linear-gradient(90deg, #1A1A1A 50%, #F4F2ED 50%)',
+    'Dark Blue & White': 'linear-gradient(90deg, #1F3A5F 50%, #F4F2ED 50%)',
+    'Black & Dark Blue': 'linear-gradient(90deg, #1A1A1A 50%, #1F3A5F 50%)'
+  };
   let cartIdCounter = 0;
 
   function renderCart(){
