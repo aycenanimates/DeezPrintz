@@ -131,6 +131,17 @@
   }
   .site-banner .close-banner:hover{opacity:1;}
 
+  .paywall-total{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:14px 0 18px;margin-bottom:8px;
+    border-bottom:1px dashed var(--line-soft);
+    font-size:14px;color:#AAB6CC;
+  }
+  .paywall-total span:last-child{
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:24px;color:var(--white);
+  }
+  .paywall-row{display:flex;gap:12px;}
+
   .logo-group{display:flex;align-items:center;gap:14px;}
   .admin-badge{
     font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:500;
@@ -923,6 +934,43 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="paywallOverlay">
+    <div class="order-modal">
+      <button class="modal-close" id="closePaywall" aria-label="Close">&times;</button>
+      <div class="modal-kicker">SECURE CHECKOUT</div>
+      <h3>Complete your order</h3>
+
+      <div class="paywall-total">
+        <span>Amount due</span>
+        <span id="paywallAmount">$0.00</span>
+      </div>
+
+      <form id="paymentForm">
+        <div class="modal-field">
+          <label for="cardName">Name on card</label>
+          <input type="text" id="cardName" class="account-input" placeholder="Jane Maker" required>
+        </div>
+        <div class="modal-field">
+          <label for="cardNumber">Card number</label>
+          <input type="text" id="cardNumber" class="account-input" placeholder="4242 4242 4242 4242" inputmode="numeric" maxlength="19" required>
+        </div>
+        <div class="paywall-row">
+          <div class="modal-field" style="flex:1;">
+            <label for="cardExpiry">Expiry</label>
+            <input type="text" id="cardExpiry" class="account-input" placeholder="MM/YY" maxlength="5" required>
+          </div>
+          <div class="modal-field" style="flex:1;">
+            <label for="cardCvc">CVC</label>
+            <input type="text" id="cardCvc" class="account-input" placeholder="123" inputmode="numeric" maxlength="4" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-order-confirm" id="payBtn">Pay</button>
+        <div class="modal-note" id="paymentMsg" style="text-align:center;margin-top:10px;"></div>
+      </form>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="orderModalOverlay">
     <div class="order-modal">
       <button class="modal-close" id="closeOrderModal" aria-label="Close">&times;</button>
@@ -1238,10 +1286,84 @@
   const cartEmptyBrowse = document.getElementById('cartEmptyBrowse');
   if (cartEmptyBrowse) cartEmptyBrowse.addEventListener('click', closeCartPageFn);
   const checkoutBtn = document.getElementById('checkoutBtn');
+  const paywallOverlay = document.getElementById('paywallOverlay');
+  const closePaywall = document.getElementById('closePaywall');
+  const paywallAmount = document.getElementById('paywallAmount');
+  const paymentForm = document.getElementById('paymentForm');
+  const paymentMsg = document.getElementById('paymentMsg');
+  const payBtn = document.getElementById('payBtn');
+
+  function cartTotalValue(){
+    const subtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+    return cartDiscount > 0 ? subtotal * (1 - cartDiscount) : subtotal;
+  }
+
   if (checkoutBtn){
     checkoutBtn.addEventListener('click', () => {
-      checkoutBtn.textContent = 'Order placed!';
-      checkoutBtn.disabled = true;
+      if (cart.length === 0) return;
+      const total = cartTotalValue();
+      paywallAmount.textContent = `$${total.toFixed(2)}`;
+      payBtn.textContent = `Pay $${total.toFixed(2)}`;
+      paymentMsg.textContent = '';
+      paywallOverlay.classList.add('active');
+    });
+  }
+  if (closePaywall){
+    closePaywall.addEventListener('click', () => paywallOverlay.classList.remove('active'));
+  }
+  if (paywallOverlay){
+    paywallOverlay.addEventListener('click', (e) => {
+      if (e.target === paywallOverlay) paywallOverlay.classList.remove('active');
+    });
+  }
+
+  // Light input formatting
+  const cardNumberInput = document.getElementById('cardNumber');
+  if (cardNumberInput){
+    cardNumberInput.addEventListener('input', () => {
+      const digits = cardNumberInput.value.replace(/\D/g, '').slice(0, 16);
+      cardNumberInput.value = digits.replace(/(.{4})/g, '$1 ').trim();
+    });
+  }
+  const cardExpiryInput = document.getElementById('cardExpiry');
+  if (cardExpiryInput){
+    cardExpiryInput.addEventListener('input', () => {
+      const digits = cardExpiryInput.value.replace(/\D/g, '').slice(0, 4);
+      cardExpiryInput.value = digits.length > 2 ? `${digits.slice(0,2)}/${digits.slice(2)}` : digits;
+    });
+  }
+  const cardCvcInput = document.getElementById('cardCvc');
+  if (cardCvcInput){
+    cardCvcInput.addEventListener('input', () => {
+      cardCvcInput.value = cardCvcInput.value.replace(/\D/g, '').slice(0, 4);
+    });
+  }
+
+  if (paymentForm){
+    paymentForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const digits = cardNumberInput.value.replace(/\D/g, '');
+      if (digits.length < 15){
+        paymentMsg.textContent = 'Enter a valid card number.';
+        paymentMsg.style.color = '#E9736B';
+        return;
+      }
+      payBtn.disabled = true;
+      payBtn.textContent = 'Processing…';
+      setTimeout(() => {
+        paymentMsg.style.color = 'var(--amber)';
+        paymentMsg.textContent = 'Payment successful — your order is in the queue.';
+        payBtn.textContent = 'Paid';
+        cart = [];
+        cartDiscount = 0;
+        cartDiscountCode = '';
+        renderCart();
+        setTimeout(() => {
+          paywallOverlay.classList.remove('active');
+          payBtn.disabled = false;
+          paymentForm.reset();
+        }, 1800);
+      }, 1200);
     });
   }
 
@@ -1517,13 +1639,41 @@
     adminCodeList.querySelectorAll('.toggle-code').forEach(btn => {
       btn.addEventListener('click', async () => {
         const isActive = btn.dataset.active === 'true';
-        await supabaseClient.from('discount_codes').update({ active: !isActive }).eq('id', btn.dataset.id);
+        const { data: updated, error: updateError } = await supabaseClient
+          .from('discount_codes')
+          .update({ active: !isActive })
+          .eq('id', btn.dataset.id)
+          .select();
+        if (updateError){
+          adminCodeMsg.textContent = updateError.message;
+          adminCodeMsg.style.color = '#E9736B';
+          return;
+        }
+        if (!updated || updated.length === 0){
+          adminCodeMsg.textContent = 'Blocked by row-level security — no rows changed. Check the "Admins manage codes" policy exists and that you are logged in as an admin.';
+          adminCodeMsg.style.color = '#E9736B';
+          return;
+        }
         loadAdminCodes();
       });
     });
     adminCodeList.querySelectorAll('.delete-code').forEach(btn => {
       btn.addEventListener('click', async () => {
-        await supabaseClient.from('discount_codes').delete().eq('id', btn.dataset.id);
+        const { data: deleted, error: deleteError } = await supabaseClient
+          .from('discount_codes')
+          .delete()
+          .eq('id', btn.dataset.id)
+          .select();
+        if (deleteError){
+          adminCodeMsg.textContent = deleteError.message;
+          adminCodeMsg.style.color = '#E9736B';
+          return;
+        }
+        if (!deleted || deleted.length === 0){
+          adminCodeMsg.textContent = 'Blocked by row-level security — nothing deleted. Check the "Admins manage codes" policy exists and that you are logged in as an admin.';
+          adminCodeMsg.style.color = '#E9736B';
+          return;
+        }
         loadAdminCodes();
       });
     });
@@ -1581,14 +1731,36 @@
     adminBannerList.querySelectorAll('.toggle-banner').forEach(btn => {
       btn.addEventListener('click', async () => {
         const isActive = btn.dataset.active === 'true';
-        await supabaseClient.from('banners').update({ active: !isActive }).eq('id', btn.dataset.id);
+        const { data: updated, error: updateError } = await supabaseClient
+          .from('banners')
+          .update({ active: !isActive })
+          .eq('id', btn.dataset.id)
+          .select();
+        if (updateError || !updated || updated.length === 0){
+          adminBannerMsg.textContent = updateError
+            ? updateError.message
+            : 'Blocked by row-level security — no rows changed. Check the "Admins manage banners" policy and your admin role.';
+          adminBannerMsg.style.color = '#E9736B';
+          return;
+        }
         loadAdminBanners();
         loadSiteBanners();
       });
     });
     adminBannerList.querySelectorAll('.delete-banner').forEach(btn => {
       btn.addEventListener('click', async () => {
-        await supabaseClient.from('banners').delete().eq('id', btn.dataset.id);
+        const { data: deleted, error: deleteError } = await supabaseClient
+          .from('banners')
+          .delete()
+          .eq('id', btn.dataset.id)
+          .select();
+        if (deleteError || !deleted || deleted.length === 0){
+          adminBannerMsg.textContent = deleteError
+            ? deleteError.message
+            : 'Blocked by row-level security — nothing deleted. Check the "Admins manage banners" policy and your admin role.';
+          adminBannerMsg.style.color = '#E9736B';
+          return;
+        }
         loadAdminBanners();
         loadSiteBanners();
       });
@@ -1802,7 +1974,13 @@
     canvas.addEventListener('click', flap);
     canvas.addEventListener('touchstart', (e) => { e.preventDefault(); flap(); }, { passive:false });
     window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space'){ e.preventDefault(); flap(); }
+      if (e.code === 'Space'){
+        const t = e.target;
+        const typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+        if (typing) return;
+        e.preventDefault();
+        flap();
+      }
     });
 
     resetGame();
