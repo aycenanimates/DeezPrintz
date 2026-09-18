@@ -93,6 +93,7 @@
   }
   .admin-order-row .order-items{font-size:13.5px;color:#C7D0E0;margin-bottom:8px;}
   .admin-order-row .order-address{font-size:12.5px;color:#8493AF;line-height:1.6;}
+  .admin-order-row .order-venmo{font-size:13px;color:#3D95CE;font-weight:500;margin-bottom:6px;}
   .admin-order-row .order-date{
     font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5C7096;margin-top:8px;
   }
@@ -1043,6 +1044,10 @@
         <p style="font-size:13.5px;color:#AAB6CC;margin:0 0 18px;">
           Confirm your shipping details, then pay with Venmo. We'll mark your order as paid once it comes through.
         </p>
+        <div class="modal-field">
+          <label for="buyerVenmo">Your Venmo username</label>
+          <input type="text" id="buyerVenmo" class="account-input" placeholder="@your-venmo" required>
+        </div>
 
         <button type="submit" class="btn-order-confirm venmo-btn" id="payBtn">Pay with Venmo</button>
         <div class="modal-note" id="paymentMsg" style="text-align:center;margin-top:10px;"></div>
@@ -1428,6 +1433,7 @@
         discount_code: cartDiscountCode || null,
         total: Number(total.toFixed(2)),
         payment_method: 'venmo',
+        buyer_venmo: document.getElementById('buyerVenmo').value.trim(),
         paid: false
       };
 
@@ -1750,6 +1756,7 @@
               <span class="order-total">$${Number(o.total).toFixed(2)}</span>
             </div>
             <div class="order-items">${items}${o.discount_code ? ` · code ${o.discount_code}` : ''}</div>
+            <div class="order-venmo">Venmo: ${o.buyer_venmo || '—'}</div>
             <div class="order-address">
               ${o.address_line1}${o.address_line2 ? ', ' + o.address_line2 : ''}<br>
               ${o.city}${o.state ? ', ' + o.state : ''} ${o.postal_code}<br>
