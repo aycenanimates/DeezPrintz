@@ -77,6 +77,10 @@
     font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;
     letter-spacing:-0.01em;
   }
+  .admin-save-btn.is-paid{
+    background:rgba(255,178,56,0.12);border-color:var(--amber);color:var(--amber);
+  }
+
   .admin-order-row{
     display:flex;align-items:flex-start;gap:16px;
     padding:18px 0;border-bottom:1px solid var(--line-soft);
@@ -1764,6 +1768,9 @@
             </div>
             <div class="order-date">${date}</div>
           </div>
+          <button class="admin-save-btn paid-toggle${o.paid ? ' is-paid' : ''}" data-id="${o.id}" data-paid="${o.paid}" type="button">
+            ${o.paid ? '✓ Paid' : 'Mark Paid'}
+          </button>
           <select class="admin-role-select order-status" data-id="${o.id}">
             <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>pending</option>
             <option value="printing" ${o.status === 'printing' ? 'selected' : ''}>printing</option>
@@ -1775,6 +1782,24 @@
         </div>
       `;
     }).join('');
+
+    adminOrderList.querySelectorAll('.paid-toggle').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const isPaid = btn.dataset.paid === 'true';
+        btn.textContent = '…';
+        const { data: updated, error: paidError } = await supabaseClient
+          .from('orders').update({ paid: !isPaid }).eq('id', id).select();
+        if (paidError || !updated || !updated.length){
+          btn.textContent = 'Failed';
+          setTimeout(() => { btn.textContent = isPaid ? '✓ Paid' : 'Mark Paid'; }, 1500);
+          return;
+        }
+        btn.dataset.paid = String(!isPaid);
+        btn.textContent = !isPaid ? '✓ Paid' : 'Mark Paid';
+        btn.classList.toggle('is-paid', !isPaid);
+      });
+    });
 
     adminOrderList.querySelectorAll('.save-order').forEach(btn => {
       btn.addEventListener('click', async () => {
