@@ -168,6 +168,10 @@
     background:#3D95CE !important;color:#fff !important;
   }
   .venmo-btn:hover{background:#2C7DB3 !important;}
+  #cardPayBtn{
+    background:#000 !important;color:#fff !important;
+  }
+  #cardPayBtn:hover{background:#1a1a1a !important;}
 
   #paywallOverlay{z-index:80;}
   #confirmOverlay{z-index:90;}
@@ -1046,14 +1050,16 @@
 
         <div class="paywall-section-label" style="margin-top:22px;">PAYMENT</div>
         <p style="font-size:13.5px;color:#AAB6CC;margin:0 0 18px;">
-          Confirm your shipping details, then pay with Venmo. We'll mark your order as paid once it comes through.
+          Pay with Venmo, or with a card / Apple Pay / Google Pay through Stripe.
         </p>
         <div class="modal-field">
-          <label for="buyerVenmo">Your Venmo username</label>
-          <input type="text" id="buyerVenmo" class="account-input" placeholder="@your-venmo" required>
+          <label for="buyerVenmo">Your Venmo username (if paying by Venmo)</label>
+          <input type="text" id="buyerVenmo" class="account-input" placeholder="@your-venmo">
         </div>
 
         <button type="submit" class="btn-order-confirm venmo-btn" id="payBtn">Pay with Venmo</button>
+        <div style="text-align:center;font-size:12px;color:#8493AF;margin:12px 0;">or</div>
+        <button type="button" class="btn-order-confirm" id="cardPayBtn">Pay with Card / Apple Pay</button>
         <div class="modal-note" id="paymentMsg" style="text-align:center;margin-top:10px;"></div>
       </form>
     </div>
@@ -1419,6 +1425,13 @@
     paymentForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
+      const venmoUsername = document.getElementById('buyerVenmo').value.trim();
+      if (!venmoUsername){
+        paymentMsg.textContent = 'Enter your Venmo username, or use the Card / Apple Pay button instead.';
+        paymentMsg.style.color = '#E9736B';
+        return;
+      }
+
       payBtn.disabled = true;
       payBtn.textContent = 'Saving order…';
       paymentMsg.textContent = '';
@@ -1474,6 +1487,81 @@
       cartPage.classList.remove('active');
       document.getElementById('confirmAmount').textContent = `$${total.toFixed(2)}`;
       confirmOverlay.classList.add('active');
+    });
+  }
+
+  const cardPayBtn = document.getElementById('cardPayBtn');
+  if (cardPayBtn){
+    cardPayBtn.addEventListener('click', async () => {
+      const requiredIds = ['shipName','shipEmail','shipAddress1','shipCity','shipZip'];
+      for (const id of requiredIds){
+        const field = document.getElementById(id);
+        if (!field.value.trim()){
+          paymentMsg.textContent = 'Fill in your shipping details first.';
+          paymentMsg.style.color = '#E9736B';
+          field.focus();
+          return;
+        }
+      }
+      if (cart.length === 0) return;
+
+      cardPayBtn.disabled = true;
+      cardPayBtn.textContent = 'Saving order…';
+      paymentMsg.textContent = '';
+
+      const total = cartTotalValue();
+      const orderPayload = {
+        email: document.getElementById('shipEmail').value.trim(),
+        full_name: document.getElementById('shipName').value.trim(),
+        phone: document.getElementById('shipPhone').value.trim() || null,
+        address_line1: document.getElementById('shipAddress1').value.trim(),
+        address_line2: document.getElementById('shipAddress2').value.trim() || null,
+        city: document.getElementById('shipCity').value.trim(),
+        state: document.getElementById('shipState').value.trim() || null,
+        postal_code: document.getElementById('shipZip').value.trim(),
+        items: cart.map(i => ({ design:'Spiral Fidget Cone', color:i.color, quantity:i.quantity, unit_price:i.unitPrice })),
+        discount_code: cartDiscountCode || null,
+        total: Number(total.toFixed(2)),
+        payment_method: 'card',
+        paid: false
+      };
+
+      if (supabaseClient){
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        if (sessionData && sessionData.session){
+          orderPayload.user_id = sessionData.session.user.id;
+        }
+        const { error: orderError } = await supabaseClient.from('orders').insert(orderPayload);
+        if (orderError){
+          paymentMsg.textContent = orderError.message;
+          paymentMsg.style.color = '#E9736B';
+          cardPayBtn.disabled = false;
+          cardPayBtn.textContent = 'Pay with Card / Apple Pay';
+          return;
+        }
+      }
+
+      cardPayBtn.textContent = 'Redirecting to secure checkout…';
+      try {
+        const response = await fetch('/api/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: cart.map(i => ({ color: i.color, quantity: i.quantity, unitPrice: i.unitPrice })),
+            discountPercent: cartDiscount * 100
+          })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.url){
+          throw new Error(data.error || 'Could not start checkout.');
+        }
+        window.location.href = data.url;
+      } catch (err){
+        paymentMsg.textContent = err.message;
+        paymentMsg.style.color = '#E9736B';
+        cardPayBtn.disabled = false;
+        cardPayBtn.textContent = 'Pay with Card / Apple Pay';
+      }
     });
   }
 
