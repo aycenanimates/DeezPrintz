@@ -102,6 +102,16 @@
     font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5C7096;margin-top:8px;
   }
 
+  .terms-section{margin-bottom:30px;}
+  .terms-section h3{
+    font-family:'Space Grotesk',sans-serif;font-size:16.5px;margin-bottom:10px;color:var(--white);
+  }
+  .terms-section p, .terms-section li{
+    font-size:14.5px;color:#C7D0E0;line-height:1.65;
+  }
+  .terms-section ul{padding-left:20px;margin:8px 0;}
+  .terms-section li{margin-bottom:6px;}
+
   .admin-add-row{
     display:flex;gap:10px;margin:20px 0 24px;
   }
@@ -168,10 +178,6 @@
     background:#3D95CE !important;color:#fff !important;
   }
   .venmo-btn:hover{background:#2C7DB3 !important;}
-  #cardPayBtn{
-    background:#000 !important;color:#fff !important;
-  }
-  #cardPayBtn:hover{background:#1a1a1a !important;}
 
   #paywallOverlay{z-index:80;}
   #confirmOverlay{z-index:90;}
@@ -199,6 +205,7 @@
   .navlinks{display:flex;gap:32px;font-size:14.5px;}
   .navlinks a{text-decoration:none;color:var(--white);opacity:0.75;transition:opacity .15s;}
   .navlinks a:hover{opacity:1;}
+  #openSupportBtn:hover{opacity:1;}
   .nav-cta{
     font-size:14px;font-weight:500;padding:9px 18px;
     background:var(--amber);color:var(--navy-deep);
@@ -707,6 +714,7 @@
     <nav class="navlinks">
       <a href="#order">Materials</a>
       <a href="#how">How it works</a>
+      <button id="openSupportBtn" style="background:none;border:none;color:var(--white);opacity:0.75;font-size:14.5px;cursor:pointer;padding:0;font-family:'Inter',sans-serif;">Support</button>
     </nav>
     <button class="icon-btn" id="accountBtn" aria-label="Account">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -839,6 +847,10 @@
     <div id="adminUserList"></div>
     <div class="modal-note" id="adminPanelMsg" style="margin-top:16px;"></div>
 
+    <h1 style="margin-top:56px;">Support Requests</h1>
+    <div id="adminSupportList"></div>
+    <div class="modal-note" id="adminSupportMsg" style="margin-top:12px;"></div>
+
     <h1 style="margin-top:56px;">Orders</h1>
     <div id="adminOrderList"></div>
     <div class="modal-note" id="adminOrderMsg" style="margin-top:12px;"></div>
@@ -859,6 +871,124 @@
     </div>
     <div id="adminBannerList"></div>
     <div class="modal-note" id="adminBannerMsg" style="margin-top:12px;"></div>
+  </div>
+</div>
+
+<div class="cart-page" id="termsPage">
+  <div class="cart-page-header">
+    <div class="wrap cart-page-header-inner">
+      <div class="logo"><div class="reg"></div>DEEZPRINTZ</div>
+      <button class="cart-page-close" id="closeTermsPage" aria-label="Close">&times; Close</button>
+    </div>
+  </div>
+
+  <div class="wrap cart-page-body" style="max-width:720px;">
+    <h1>Terms of Service</h1>
+    <div style="font-size:13px;color:#8493AF;margin:-20px 0 32px;">Last updated: [DATE]</div>
+
+    <div style="border:1px dashed #4A5C82;background:var(--navy-panel);padding:18px 20px;border-radius:2px;font-size:13.5px;color:#AAB6CC;margin-bottom:36px;">
+      This is a general template, not legal advice tailored to your business. Replace every bracketed [placeholder] before this matters for real.
+    </div>
+
+    <div class="terms-section">
+      <h3>01. Agreement to Terms</h3>
+      <p>By placing an order through DeezPrintz ("we," "us," "our"), you agree to these Terms of Service. If you don't agree, please don't use this site to place an order.</p>
+    </div>
+
+    <div class="terms-section">
+      <h3>02. Products &amp; Made-to-Order Nature</h3>
+      <p>Every item is 3D printed to order. Minor variations in color, texture, or surface finish between units are normal and are not considered defects. Printed parts are not toys and may have small components or sharp edges — items should be kept away from small children and pets regardless of stated age range.</p>
+    </div>
+
+    <div class="terms-section">
+      <h3>03. Orders &amp; Payment</h3>
+      <ul>
+        <li>Orders are currently paid via Venmo. Payment is confirmed manually, so there may be a delay between placing an order and us confirming it.</li>
+        <li>An order isn't guaranteed or queued for printing until payment is received and confirmed.</li>
+        <li>Prices are subject to change without notice, but the price shown and paid at checkout is the price honored for that order.</li>
+        <li>Discount codes are subject to availability and may be modified or discontinued at any time.</li>
+      </ul>
+    </div>
+
+    <div class="terms-section">
+      <h3>04. Shipping</h3>
+      <p>Estimated production and shipping times are estimates, not guarantees. We aren't responsible for delays, loss, or damage caused by shipping carriers once a package has left our hands. It's your responsibility to enter an accurate shipping address at checkout.</p>
+    </div>
+
+    <div class="terms-section">
+      <h3>05. Returns, Refunds &amp; Cancellations</h3>
+      <ul>
+        <li>Because items are made to order, all sales are final except for a defective or significantly damaged item on arrival.</li>
+        <li>If your item arrives damaged or defective, contact support within [7] days of delivery with photos, and we'll work out a replacement or refund at our discretion.</li>
+        <li>Orders can be cancelled for a full refund only if production hasn't started yet.</li>
+      </ul>
+    </div>
+
+    <div class="terms-section">
+      <h3>06. Your Account &amp; Information</h3>
+      <p>If you create an account, you're responsible for keeping your login credentials secure. We collect the information needed to fulfill your order — name, email, shipping address, phone number, and payment identifiers like a Venmo username — and use it only for that purpose and related communication. We don't sell your information to third parties.</p>
+    </div>
+
+    <div class="terms-section">
+      <h3>07. Limitation of Liability</h3>
+      <p>To the fullest extent permitted by law, DeezPrintz is not liable for indirect, incidental, or consequential damages from the use or misuse of any product purchased here. Our total liability for any order is limited to the amount paid for that order.</p>
+    </div>
+
+    <div class="terms-section">
+      <h3>08. Changes to These Terms</h3>
+      <p>We may update these terms from time to time. Continued use of the site after changes are posted means you accept the updated terms.</p>
+    </div>
+
+    <div class="terms-section">
+      <h3>09. Contact</h3>
+      <p>Questions about these terms or an order can be sent to support.</p>
+    </div>
+  </div>
+</div>
+
+<div class="cart-page" id="supportPage">
+  <div class="cart-page-header">
+    <div class="wrap cart-page-header-inner">
+      <div class="logo"><div class="reg"></div>DEEZPRINTZ</div>
+      <button class="cart-page-close" id="closeSupportPage" aria-label="Close">&times; Close</button>
+    </div>
+  </div>
+
+  <div class="wrap cart-page-body" style="max-width:560px;">
+    <h1>Support</h1>
+    <p style="color:#AAB6CC;font-size:14.5px;margin:-20px 0 32px;">Having an issue with an order, or just have a question? Send it over.</p>
+
+    <form id="supportForm">
+      <div class="modal-field">
+        <label for="supportName">Name</label>
+        <input type="text" id="supportName" class="account-input" placeholder="Your name" required>
+      </div>
+      <div class="modal-field">
+        <label for="supportEmail">Email</label>
+        <input type="email" id="supportEmail" class="account-input" placeholder="you@email.com" required>
+      </div>
+      <div class="modal-field">
+        <label for="supportOrderRef">Order reference (optional)</label>
+        <input type="text" id="supportOrderRef" class="account-input" placeholder="If this is about an existing order">
+      </div>
+      <div class="modal-field">
+        <label for="supportReason">Reason</label>
+        <select id="supportReason" class="account-input">
+          <option value="Order issue">Order issue</option>
+          <option value="Shipping issue">Shipping issue</option>
+          <option value="Payment issue">Payment issue</option>
+          <option value="General question">General question</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label for="supportMessage">Message</label>
+        <textarea id="supportMessage" class="account-input" rows="5" placeholder="Tell us what's going on" required style="resize:vertical;font-family:'Inter',sans-serif;"></textarea>
+      </div>
+
+      <button type="submit" class="btn-order-confirm" id="supportSubmitBtn">Send request</button>
+      <div class="modal-note" id="supportMsg" style="text-align:center;margin-top:10px;"></div>
+    </form>
   </div>
 </div>
 
@@ -1050,16 +1180,14 @@
 
         <div class="paywall-section-label" style="margin-top:22px;">PAYMENT</div>
         <p style="font-size:13.5px;color:#AAB6CC;margin:0 0 18px;">
-          Pay with Venmo, or with a card / Apple Pay / Google Pay through Stripe.
+          Confirm your shipping details, then pay with Venmo. We'll mark your order as paid once it comes through.
         </p>
         <div class="modal-field">
-          <label for="buyerVenmo">Your Venmo username (if paying by Venmo)</label>
-          <input type="text" id="buyerVenmo" class="account-input" placeholder="@your-venmo">
+          <label for="buyerVenmo">Your Venmo username</label>
+          <input type="text" id="buyerVenmo" class="account-input" placeholder="@your-venmo" required>
         </div>
 
         <button type="submit" class="btn-order-confirm venmo-btn" id="payBtn">Pay with Venmo</button>
-        <div style="text-align:center;font-size:12px;color:#8493AF;margin:12px 0;">or</div>
-        <button type="button" class="btn-order-confirm" id="cardPayBtn">Pay with Card / Apple Pay</button>
         <div class="modal-note" id="paymentMsg" style="text-align:center;margin-top:10px;"></div>
       </form>
     </div>
@@ -1157,7 +1285,10 @@
 <footer>
   <div class="wrap foot-row">
     <div class="logo" style="font-size:15px;"><div class="reg"></div>DEEZPRINTZ</div>
-    <div>Fabrication shop · orders queued 7am–6pm</div>
+    <div style="display:flex;align-items:center;gap:24px;">
+      <button id="openTermsBtn" style="background:none;border:none;color:#8493AF;text-decoration:underline;font-size:13px;cursor:pointer;padding:0;font-family:'Inter',sans-serif;">Terms of Service</button>
+      <div>Fabrication shop · orders queued 7am–6pm</div>
+    </div>
   </div>
 </footer>
 
@@ -1203,6 +1334,8 @@
       if (cartPage) cartPage.classList.remove('active');
       if (accountPage) accountPage.classList.remove('active');
       if (adminPage) adminPage.classList.remove('active');
+      if (termsPage) termsPage.classList.remove('active');
+      if (supportPage) supportPage.classList.remove('active');
       document.body.style.overflow = '';
     }
   });
@@ -1427,7 +1560,7 @@
 
       const venmoUsername = document.getElementById('buyerVenmo').value.trim();
       if (!venmoUsername){
-        paymentMsg.textContent = 'Enter your Venmo username, or use the Card / Apple Pay button instead.';
+        paymentMsg.textContent = 'Enter your Venmo username to continue.';
         paymentMsg.style.color = '#E9736B';
         return;
       }
@@ -1487,81 +1620,6 @@
       cartPage.classList.remove('active');
       document.getElementById('confirmAmount').textContent = `$${total.toFixed(2)}`;
       confirmOverlay.classList.add('active');
-    });
-  }
-
-  const cardPayBtn = document.getElementById('cardPayBtn');
-  if (cardPayBtn){
-    cardPayBtn.addEventListener('click', async () => {
-      const requiredIds = ['shipName','shipEmail','shipAddress1','shipCity','shipZip'];
-      for (const id of requiredIds){
-        const field = document.getElementById(id);
-        if (!field.value.trim()){
-          paymentMsg.textContent = 'Fill in your shipping details first.';
-          paymentMsg.style.color = '#E9736B';
-          field.focus();
-          return;
-        }
-      }
-      if (cart.length === 0) return;
-
-      cardPayBtn.disabled = true;
-      cardPayBtn.textContent = 'Saving order…';
-      paymentMsg.textContent = '';
-
-      const total = cartTotalValue();
-      const orderPayload = {
-        email: document.getElementById('shipEmail').value.trim(),
-        full_name: document.getElementById('shipName').value.trim(),
-        phone: document.getElementById('shipPhone').value.trim() || null,
-        address_line1: document.getElementById('shipAddress1').value.trim(),
-        address_line2: document.getElementById('shipAddress2').value.trim() || null,
-        city: document.getElementById('shipCity').value.trim(),
-        state: document.getElementById('shipState').value.trim() || null,
-        postal_code: document.getElementById('shipZip').value.trim(),
-        items: cart.map(i => ({ design:'Spiral Fidget Cone', color:i.color, quantity:i.quantity, unit_price:i.unitPrice })),
-        discount_code: cartDiscountCode || null,
-        total: Number(total.toFixed(2)),
-        payment_method: 'card',
-        paid: false
-      };
-
-      if (supabaseClient){
-        const { data: sessionData } = await supabaseClient.auth.getSession();
-        if (sessionData && sessionData.session){
-          orderPayload.user_id = sessionData.session.user.id;
-        }
-        const { error: orderError } = await supabaseClient.from('orders').insert(orderPayload);
-        if (orderError){
-          paymentMsg.textContent = orderError.message;
-          paymentMsg.style.color = '#E9736B';
-          cardPayBtn.disabled = false;
-          cardPayBtn.textContent = 'Pay with Card / Apple Pay';
-          return;
-        }
-      }
-
-      cardPayBtn.textContent = 'Redirecting to secure checkout…';
-      try {
-        const response = await fetch('/api/create-checkout-session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            items: cart.map(i => ({ color: i.color, quantity: i.quantity, unitPrice: i.unitPrice })),
-            discountPercent: cartDiscount * 100
-          })
-        });
-        const data = await response.json();
-        if (!response.ok || !data.url){
-          throw new Error(data.error || 'Could not start checkout.');
-        }
-        window.location.href = data.url;
-      } catch (err){
-        paymentMsg.textContent = err.message;
-        paymentMsg.style.color = '#E9736B';
-        cardPayBtn.disabled = false;
-        cardPayBtn.textContent = 'Pay with Card / Apple Pay';
-      }
     });
   }
 
@@ -1814,6 +1872,62 @@
           .eq('id', id);
         btn.textContent = updateError ? 'Failed' : 'Saved';
         setTimeout(() => { btn.textContent = 'Save'; }, 1500);
+      });
+    });
+  }
+
+  async function loadAdminSupport(){
+    const adminSupportMsg = document.getElementById('adminSupportMsg');
+    const adminSupportList = document.getElementById('adminSupportList');
+    const { data, error } = await supabaseClient
+      .from('support_requests')
+      .select('*')
+      .eq('resolved', false)
+      .order('created_at', { ascending: false });
+    if (error){
+      adminSupportMsg.textContent = error.message;
+      adminSupportMsg.style.color = '#E9736B';
+      return;
+    }
+    adminSupportMsg.textContent = '';
+    if (!data.length){
+      adminSupportList.innerHTML = '<p style="color:#8493AF;font-size:14px;">No open support requests.</p>';
+      return;
+    }
+
+    adminSupportList.innerHTML = data.map(s => {
+      const date = new Date(s.created_at).toLocaleDateString();
+      return `
+        <div class="admin-order-row" data-id="${s.id}">
+          <div class="order-main">
+            <div class="order-top">
+              <span class="order-name">${s.name} · ${s.reason}</span>
+              <span class="order-total" style="color:#8493AF;">${date}</span>
+            </div>
+            <div class="order-items">${s.email}${s.order_reference ? ' · order: ' + s.order_reference : ''}</div>
+            <div class="order-address">${s.message}</div>
+          </div>
+          <button class="admin-save-btn resolve-support" data-id="${s.id}" type="button">Resolved</button>
+        </div>
+      `;
+    }).join('');
+
+    adminSupportList.querySelectorAll('.resolve-support').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        btn.textContent = '…';
+        const { data: updated, error: resolveError } = await supabaseClient
+          .from('support_requests').update({ resolved: true }).eq('id', id).select();
+        if (resolveError || !updated || !updated.length){
+          btn.textContent = 'Failed';
+          setTimeout(() => { btn.textContent = 'Resolved'; }, 1500);
+          return;
+        }
+        const row = adminSupportList.querySelector(`.admin-order-row[data-id="${id}"]`);
+        if (row) row.remove();
+        if (!adminSupportList.children.length){
+          adminSupportList.innerHTML = '<p style="color:#8493AF;font-size:14px;">No open support requests.</p>';
+        }
       });
     });
   }
@@ -2104,6 +2218,7 @@
     adminPage.classList.add('active');
     document.body.style.overflow = 'hidden';
     loadAdminUsers();
+    loadAdminSupport();
     loadAdminOrders();
     loadAdminCodes();
     loadAdminBanners();
@@ -2114,6 +2229,78 @@
   }
   if (adminPanelBtn) adminPanelBtn.addEventListener('click', openAdminPage);
   if (closeAdminPage) closeAdminPage.addEventListener('click', closeAdminPageFn);
+
+  const openTermsBtn = document.getElementById('openTermsBtn');
+  const termsPage = document.getElementById('termsPage');
+  const closeTermsPage = document.getElementById('closeTermsPage');
+  if (openTermsBtn){
+    openTermsBtn.addEventListener('click', () => {
+      termsPage.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    });
+  }
+  if (closeTermsPage){
+    closeTermsPage.addEventListener('click', () => {
+      termsPage.classList.remove('active');
+      document.body.style.overflow = '';
+    });
+  }
+
+  const openSupportBtn = document.getElementById('openSupportBtn');
+  const supportPage = document.getElementById('supportPage');
+  const closeSupportPage = document.getElementById('closeSupportPage');
+  const supportForm = document.getElementById('supportForm');
+  const supportMsg = document.getElementById('supportMsg');
+  const supportSubmitBtn = document.getElementById('supportSubmitBtn');
+
+  if (openSupportBtn){
+    openSupportBtn.addEventListener('click', () => {
+      supportPage.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    });
+  }
+  if (closeSupportPage){
+    closeSupportPage.addEventListener('click', () => {
+      supportPage.classList.remove('active');
+      document.body.style.overflow = '';
+    });
+  }
+  if (supportForm){
+    supportForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!supabaseClient){
+        supportMsg.textContent = 'Support requests need Supabase connected.';
+        supportMsg.style.color = '#E9736B';
+        return;
+      }
+      supportSubmitBtn.disabled = true;
+      supportSubmitBtn.textContent = 'Sending…';
+      const payload = {
+        name: document.getElementById('supportName').value.trim(),
+        email: document.getElementById('supportEmail').value.trim(),
+        order_reference: document.getElementById('supportOrderRef').value.trim() || null,
+        reason: document.getElementById('supportReason').value,
+        message: document.getElementById('supportMessage').value.trim()
+      };
+      const { error } = await supabaseClient.from('support_requests').insert(payload);
+      if (error){
+        supportMsg.textContent = error.message;
+        supportMsg.style.color = '#E9736B';
+        supportSubmitBtn.disabled = false;
+        supportSubmitBtn.textContent = 'Send request';
+        return;
+      }
+      supportMsg.textContent = "Sent — we'll get back to you by email.";
+      supportMsg.style.color = 'var(--amber)';
+      supportSubmitBtn.textContent = 'Sent!';
+      supportForm.reset();
+      setTimeout(() => {
+        supportSubmitBtn.disabled = false;
+        supportSubmitBtn.textContent = 'Send request';
+        supportMsg.textContent = '';
+      }, 2500);
+    });
+  }
 
   const refPhoto = document.getElementById('refPhoto');
   const refPhotoName = document.getElementById('refPhotoName');
