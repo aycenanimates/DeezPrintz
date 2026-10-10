@@ -489,6 +489,13 @@
     box-shadow:0 0 0 1px rgba(244,242,237,0.25);
   }
   .color-select-dot.active{border-color:var(--amber);}
+  .size-select{display:flex;gap:8px;flex-wrap:wrap;}
+  .size-select-btn{
+    padding:8px 13px;border:1px solid var(--line-soft);border-radius:2px;
+    background:var(--navy-deep);color:var(--white);
+    font-family:'IBM Plex Mono',monospace;font-size:13px;cursor:pointer;
+  }
+  .size-select-btn.active{background:var(--amber);color:var(--navy-deep);border-color:var(--amber);}
   .qty-stepper{
     display:inline-flex;align-items:center;gap:16px;
     border:1px solid var(--line-soft);border-radius:2px;
@@ -946,6 +953,59 @@
   </div>
 </div>
 
+<div class="cart-page" id="privacyPage">
+  <div class="cart-page-header">
+    <div class="wrap cart-page-header-inner">
+      <div class="logo"><div class="reg"></div>DEEZPRINTZ</div>
+      <button class="cart-page-close" id="closePrivacyPage" aria-label="Close">&times; Close</button>
+    </div>
+  </div>
+
+  <div class="wrap cart-page-body" style="max-width:720px;">
+    <h1>Privacy Policy</h1>
+    <div style="font-size:13px;color:#8493AF;margin:-20px 0 32px;">Last updated: [DATE]</div>
+
+    <div style="border:1px dashed #4A5C82;background:var(--navy-panel);padding:18px 20px;border-radius:2px;font-size:13.5px;color:#AAB6CC;margin-bottom:36px;">
+      This is a general template, not legal advice tailored to your business. Replace every bracketed [placeholder] before publishing.
+    </div>
+
+    <div class="terms-section">
+      <h3>01. Information We Collect</h3>
+      <p>When you place an order or create an account, we collect the information you provide directly: your name, email address, shipping address, phone number, and a Venmo username for payment matching. If you contact support, we also keep whatever you include in that message.</p>
+    </div>
+
+    <div class="terms-section">
+      <h3>02. How We Use Your Information</h3>
+      <p>We use this information only to fulfill and ship your order, communicate with you about it, and respond to support requests. We don't sell your personal information to third parties.</p>
+    </div>
+
+    <div class="terms-section">
+      <h3>03. Cookies &amp; Advertising</h3>
+      <p>This site may use cookies and similar technologies from Google and other third-party vendors to serve ads based on your visits to this and other sites. Google's use of advertising cookies enables it and its partners to serve ads based on your visit to this site and/or other sites on the internet. You may opt out of personalized advertising by visiting <a href="https://adssettings.google.com" target="_blank" rel="noopener">Google Ads Settings</a>. You can also learn more about how third-party vendors use cookies at <a href="https://www.aboutads.info" target="_blank" rel="noopener">aboutads.info</a>.</p>
+    </div>
+
+    <div class="terms-section">
+      <h3>04. Data Storage</h3>
+      <p>Account and order information is stored securely using Supabase, our database provider. Passwords are never stored in plain text.</p>
+    </div>
+
+    <div class="terms-section">
+      <h3>05. Your Choices</h3>
+      <p>You can ask us to delete your account and associated order history at any time by contacting support. Note that we may need to retain certain order records for legitimate business or legal purposes even after a deletion request.</p>
+    </div>
+
+    <div class="terms-section">
+      <h3>06. Changes to This Policy</h3>
+      <p>We may update this policy from time to time. Continued use of the site after changes are posted means you accept the updated policy.</p>
+    </div>
+
+    <div class="terms-section">
+      <h3>07. Contact</h3>
+      <p>Questions about this policy can be sent to support.</p>
+    </div>
+  </div>
+</div>
+
 <div class="cart-page" id="supportPage">
   <div class="cart-page-header">
     <div class="wrap cart-page-header-inner">
@@ -1107,7 +1167,21 @@
           <div class="design-tags">
             <span class="tag">PLA</span>
           </div>
-          <a href="#" class="btn-ghost" id="openOrderModal" style="display:inline-block;margin-top:16px;">Order this design →</a>
+          <a href="#" class="btn-ghost open-order-modal" data-product="spiral-cone" style="display:inline-block;margin-top:16px;">Order this design →</a>
+        </div>
+      </div>
+
+      <div class="design-card">
+        <div class="design-image-placeholder">
+          <span>PHOTO PENDING</span>
+        </div>
+        <div class="design-card-body">
+          <h3>Clicker Fidgets</h3>
+          <p>Satisfying click buttons in a grid — snap each one down for a sharp, tactile click. From a single 1×1 up to a 2×2 block, with or without a keychain feel.</p>
+          <div class="design-tags">
+            <span class="tag">PLA</span>
+          </div>
+          <a href="#" class="btn-ghost open-order-modal" data-product="clicker-fidget" style="display:inline-block;margin-top:16px;">Order this design →</a>
         </div>
       </div>
     </div>
@@ -1196,12 +1270,18 @@
   <div class="modal-overlay" id="orderModalOverlay">
     <div class="order-modal">
       <button class="modal-close" id="closeOrderModal" aria-label="Close">&times;</button>
-      <div class="modal-kicker">SPIRAL FIDGET CONE</div>
+      <div class="modal-kicker" id="modalProductKicker">SPIRAL FIDGET CONE</div>
       <h3>Choose your options</h3>
+
+      <div class="modal-field" id="sizeFieldWrap" style="display:none;">
+        <label>Size</label>
+        <div class="size-select" id="sizeSelectContainer"></div>
+        <div class="modal-note" id="sizeLabel"></div>
+      </div>
 
       <div class="modal-field">
         <label>Color (PLA)</label>
-        <div class="color-select">
+        <div class="color-select" id="colorSelectContainer">
           <button class="color-select-dot active" style="background:linear-gradient(90deg, #1A1A1A 50%, #F4F2ED 50%);" data-color="Black &amp; White" title="Black &amp; White"></button>
           <button class="color-select-dot" style="background:linear-gradient(90deg, #1F3A5F 50%, #F4F2ED 50%);" data-color="Dark Blue &amp; White" title="Dark Blue &amp; White"></button>
           <button class="color-select-dot" style="background:linear-gradient(90deg, #1A1A1A 50%, #1F3A5F 50%);" data-color="Black &amp; Dark Blue" title="Black &amp; Dark Blue"></button>
@@ -1287,6 +1367,7 @@
     <div class="logo" style="font-size:15px;"><div class="reg"></div>DEEZPRINTZ</div>
     <div style="display:flex;align-items:center;gap:24px;">
       <button id="openTermsBtn" style="background:none;border:none;color:#8493AF;text-decoration:underline;font-size:13px;cursor:pointer;padding:0;font-family:'Inter',sans-serif;">Terms of Service</button>
+      <button id="openPrivacyBtn" style="background:none;border:none;color:#8493AF;text-decoration:underline;font-size:13px;cursor:pointer;padding:0;font-family:'Inter',sans-serif;">Privacy Policy</button>
       <div>Fabrication shop · orders queued 7am–6pm</div>
     </div>
   </div>
@@ -1305,25 +1386,107 @@
     });
   });
 
-  const BASE_PRICE = 6.00;
-  let selectedColor = 'Black & White';
+  const PRODUCTS = {
+    'spiral-cone': {
+      name: 'Spiral Fidget Cone',
+      price: 6.00,
+      colors: [
+        { label: 'Black & White', bg: 'linear-gradient(90deg, #1A1A1A 50%, #F4F2ED 50%)' },
+        { label: 'Dark Blue & White', bg: 'linear-gradient(90deg, #1F3A5F 50%, #F4F2ED 50%)' },
+        { label: 'Black & Dark Blue', bg: 'linear-gradient(90deg, #1A1A1A 50%, #1F3A5F 50%)' }
+      ]
+    },
+    'clicker-fidget': {
+      name: 'Clicker Fidgets',
+      sizes: [
+        { label: '1×1', price: 3.00 },
+        { label: '2×1', price: 4.00 },
+        { label: '3×1', price: 5.00 },
+        { label: '4×1', price: 6.00 },
+        { label: '2×2', price: 6.00 }
+      ],
+      colors: [
+        { label: 'Black', bg: '#1A1A1A' },
+        { label: 'Dark Blue', bg: '#1F3A5F' },
+        { label: 'White', bg: '#F4F2ED' }
+      ]
+    }
+  };
+
+  let activeProduct = PRODUCTS['spiral-cone'];
+  let selectedColor = activeProduct.colors[0].label;
+  let selectedSize = null;
   let quantity = 1;
   let cart = [];
   let cartDiscount = 0;
   let cartDiscountCode = '';
 
   const orderModalOverlay = document.getElementById('orderModalOverlay');
-  const openOrderModal = document.getElementById('openOrderModal');
+  const openOrderModalBtns = document.querySelectorAll('.open-order-modal');
   const closeOrderModal = document.getElementById('closeOrderModal');
+  const modalProductKicker = document.getElementById('modalProductKicker');
+  const colorSelectContainer = document.getElementById('colorSelectContainer');
+  const sizeFieldWrap = document.getElementById('sizeFieldWrap');
+  const sizeSelectContainer = document.getElementById('sizeSelectContainer');
+  const sizeLabel = document.getElementById('sizeLabel');
+
+  function currentUnitPrice(){
+    return activeProduct.sizes ? selectedSize.price : activeProduct.price;
+  }
+
+  function renderSizeOptions(){
+    if (!activeProduct.sizes){
+      sizeFieldWrap.style.display = 'none';
+      selectedSize = null;
+      return;
+    }
+    sizeFieldWrap.style.display = 'block';
+    sizeSelectContainer.innerHTML = activeProduct.sizes.map((s, i) => `
+      <button class="size-select-btn${i === 0 ? ' active' : ''}" data-index="${i}" type="button">${s.label}</button>
+    `).join('');
+    selectedSize = activeProduct.sizes[0];
+    sizeLabel.textContent = `Selected: ${selectedSize.label} — $${selectedSize.price.toFixed(2)}`;
+    sizeSelectContainer.querySelectorAll('.size-select-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        sizeSelectContainer.querySelectorAll('.size-select-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedSize = activeProduct.sizes[Number(btn.dataset.index)];
+        sizeLabel.textContent = `Selected: ${selectedSize.label} — $${selectedSize.price.toFixed(2)}`;
+        updatePriceDisplay();
+      });
+    });
+  }
+
+  function renderColorOptions(){
+    colorSelectContainer.innerHTML = activeProduct.colors.map((c, i) => `
+      <button class="color-select-dot${i === 0 ? ' active' : ''}" style="background:${c.bg};" data-color="${c.label}" title="${c.label}"></button>
+    `).join('');
+    selectedColor = activeProduct.colors[0].label;
+    colorLabel.textContent = `Selected: ${selectedColor}`;
+    colorSelectContainer.querySelectorAll('.color-select-dot').forEach(dot => {
+      dot.addEventListener('click', () => {
+        colorSelectContainer.querySelectorAll('.color-select-dot').forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+        selectedColor = dot.dataset.color;
+        colorLabel.textContent = `Selected: ${selectedColor}`;
+      });
+    });
+  }
 
   function openModal(e){
     if (e) e.preventDefault();
+    const productId = e && e.currentTarget ? e.currentTarget.dataset.product : null;
+    if (productId && PRODUCTS[productId]) activeProduct = PRODUCTS[productId];
+    modalProductKicker.textContent = activeProduct.name.toUpperCase();
+    renderSizeOptions();
+    renderColorOptions();
+    setQuantity(1);
     orderModalOverlay.classList.add('active');
   }
   function closeModal(){
     orderModalOverlay.classList.remove('active');
   }
-  if (openOrderModal) openOrderModal.addEventListener('click', openModal);
+  openOrderModalBtns.forEach(btn => btn.addEventListener('click', openModal));
   if (closeOrderModal) closeOrderModal.addEventListener('click', closeModal);
   orderModalOverlay.addEventListener('click', (e) => {
     if (e.target === orderModalOverlay) closeModal();
@@ -1336,20 +1499,12 @@
       if (adminPage) adminPage.classList.remove('active');
       if (termsPage) termsPage.classList.remove('active');
       if (supportPage) supportPage.classList.remove('active');
+      if (privacyPage) privacyPage.classList.remove('active');
       document.body.style.overflow = '';
     }
   });
 
-  const colorDots = document.querySelectorAll('.color-select-dot');
   const colorLabel = document.getElementById('colorLabel');
-  colorDots.forEach(dot => {
-    dot.addEventListener('click', () => {
-      colorDots.forEach(d => d.classList.remove('active'));
-      dot.classList.add('active');
-      selectedColor = dot.dataset.color;
-      colorLabel.textContent = `Selected: ${selectedColor}`;
-    });
-  });
 
   const qtyValueEl = document.getElementById('qtyValue');
   const qtyMinusBtn = document.getElementById('qtyMinus');
@@ -1364,7 +1519,7 @@
 
   function updatePriceDisplay(){
     const totalPriceEl = document.getElementById('totalPrice');
-    totalPriceEl.textContent = `$${(BASE_PRICE * quantity).toFixed(2)}`;
+    totalPriceEl.textContent = `$${(currentUnitPrice() * quantity).toFixed(2)}`;
   }
 
   const navCta = document.getElementById('navCta');
@@ -1381,7 +1536,10 @@
   const COLOR_HEX = {
     'Black & White': 'linear-gradient(90deg, #1A1A1A 50%, #F4F2ED 50%)',
     'Dark Blue & White': 'linear-gradient(90deg, #1F3A5F 50%, #F4F2ED 50%)',
-    'Black & Dark Blue': 'linear-gradient(90deg, #1A1A1A 50%, #1F3A5F 50%)'
+    'Black & Dark Blue': 'linear-gradient(90deg, #1A1A1A 50%, #1F3A5F 50%)',
+    'Black': '#1A1A1A',
+    'Dark Blue': '#1F3A5F',
+    'White': '#F4F2ED'
   };
   let cartIdCounter = 0;
 
@@ -1412,7 +1570,7 @@
       <div class="cart-item-row" data-id="${item.id}">
         <div class="cart-item-swatch" style="background:${COLOR_HEX[item.color] || '#333'};"></div>
         <div class="cart-item-info">
-          <div class="name">Spiral Fidget Cone — ${item.color}</div>
+          <div class="name">${item.design}${item.size ? ' (' + item.size + ')' : ''} — ${item.color}</div>
           <div class="meta">$${item.unitPrice.toFixed(2)} each</div>
           <div class="cart-item-qty">
             <button class="cart-qty-minus" data-id="${item.id}" type="button">−</button>
@@ -1579,7 +1737,7 @@
         city: document.getElementById('shipCity').value.trim(),
         state: document.getElementById('shipState').value.trim() || null,
         postal_code: document.getElementById('shipZip').value.trim(),
-        items: cart.map(i => ({ design:'Spiral Fidget Cone', color:i.color, quantity:i.quantity, unit_price:i.unitPrice })),
+        items: cart.map(i => ({ design:i.design, size:i.size, color:i.color, quantity:i.quantity, unit_price:i.unitPrice })),
         discount_code: cartDiscountCode || null,
         total: Number(total.toFixed(2)),
         payment_method: 'venmo',
@@ -1637,9 +1795,10 @@
   if (confirmOrderBtn){
     confirmOrderBtn.addEventListener('click', () => {
       cartIdCounter++;
-      cart.push({ id:'item' + cartIdCounter, color: selectedColor, quantity, unitPrice: BASE_PRICE });
+      cart.push({ id:'item' + cartIdCounter, design: activeProduct.name, size: selectedSize ? selectedSize.label : null, color: selectedColor, quantity, unitPrice: currentUnitPrice() });
       renderCart();
-      confirmMsg.textContent = `Added — ${quantity}× ${selectedColor} Spiral Fidget Cone.`;
+      const sizeNote = selectedSize ? ` (${selectedSize.label})` : '';
+      confirmMsg.textContent = `Added — ${quantity}× ${selectedColor} ${activeProduct.name}${sizeNote}.`;
       confirmMsg.style.color = 'var(--amber)';
       setQuantity(1);
     });
@@ -1952,7 +2111,7 @@
     }
 
     adminOrderList.innerHTML = data.map(o => {
-      const items = (o.items || []).map(i => `${i.quantity}× ${i.color} ${i.design}`).join(', ');
+      const items = (o.items || []).map(i => `${i.quantity}× ${i.color} ${i.design}${i.size ? ' (' + i.size + ')' : ''}`).join(', ');
       const date = new Date(o.created_at).toLocaleDateString();
       return `
         <div class="admin-order-row" data-id="${o.id}">
@@ -2242,6 +2401,22 @@
   if (closeTermsPage){
     closeTermsPage.addEventListener('click', () => {
       termsPage.classList.remove('active');
+      document.body.style.overflow = '';
+    });
+  }
+
+  const openPrivacyBtn = document.getElementById('openPrivacyBtn');
+  const privacyPage = document.getElementById('privacyPage');
+  const closePrivacyPage = document.getElementById('closePrivacyPage');
+  if (openPrivacyBtn){
+    openPrivacyBtn.addEventListener('click', () => {
+      privacyPage.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    });
+  }
+  if (closePrivacyPage){
+    closePrivacyPage.addEventListener('click', () => {
+      privacyPage.classList.remove('active');
       document.body.style.overflow = '';
     });
   }
